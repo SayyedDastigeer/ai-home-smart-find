@@ -1,13 +1,11 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, MapPin, ArrowRight } from "lucide-react";
-import { Link } from "react-router-dom";
 
 type PropertyType = "buy" | "rent" | "sell";
 
 export function HeroSection() {
   const [propertyType, setPropertyType] = useState<PropertyType>("buy");
-  const [location, setLocation] = useState("");
 
   const propertyTypes: { value: PropertyType; label: string }[] = [
     { value: "buy", label: "Buy" },
@@ -16,168 +14,134 @@ export function HeroSection() {
   ];
 
   return (
-    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[hsl(220,20%,4%)] via-[hsl(220,18%,8%)] to-[hsl(220,15%,12%)]">
-      {/* Subtle ambient glow */}
-      <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] pointer-events-none" />
+    <section className="relative min-h-[90vh] overflow-hidden bg-[#081817]">
       
-      <div className="container relative h-full min-h-screen">
-        <div className="grid lg:grid-cols-[45%_55%] min-h-screen items-center gap-8 lg:gap-0">
-          
-          {/* Left Column - Text & Search */}
-          <div className="pt-32 pb-16 lg:py-0 lg:pr-16 xl:pr-24">
-            {/* Editorial Accent */}
-            <div className="flex items-center gap-3 mb-8">
-              <div className="w-2 h-2 rounded-full bg-[hsl(var(--hero-accent))]" />
-              <span className="text-[hsl(var(--hero-text-muted))] text-sm font-medium tracking-widest uppercase">
-                AI-Powered Real Estate
-              </span>
+      {/* Ambient glow */}
+      <div className="absolute -top-32 -left-32 w-[500px] h-[500px] bg-[#29A397]/20 blur-[160px]" />
+      <div className="absolute top-1/3 right-0 w-[400px] h-[400px] bg-[#29A397]/10 blur-[140px]" />
+
+      <div className="container relative z-10 grid lg:grid-cols-[1fr_520px] gap-16 items-center py-20">
+        
+        {/* LEFT */}
+        <div>
+          {/* Tag */}
+          <div className="flex items-center gap-2 mb-6">
+            <span className="w-2 h-2 rounded-full bg-[#29A397]" />
+            <span className="text-xs tracking-[0.25em] uppercase text-gray-400 font-semibold">
+              AI Powered Real Estate
+            </span>
+          </div>
+
+          {/* Heading */}
+          <h1 className="text-white font-semibold leading-[1.08] mb-6">
+            <span className="block text-[clamp(2.6rem,4vw,3.8rem)]">
+              Discover Your
+            </span>
+            <span className="relative inline-block text-[clamp(2.6rem,4vw,3.8rem)]">
+              Perfect Home
+              <span className="absolute -bottom-2 left-0 w-12 h-1 bg-[#29A397] rounded-full" />
+            </span>
+          </h1>
+
+          <p className="text-gray-400 max-w-sm text-base leading-relaxed mb-10">
+            Smarter property decisions powered by AI — pricing accuracy,
+            location intelligence, and real market trends.
+          </p>
+
+          {/* Property Type Pills */}
+         {/* PROPERTY INTENT SWITCH (PRIMARY ACTION) */}
+<div className="inline-flex items-center gap-1 p-1.5 mb-6 rounded-full bg-[#102826]/70 backdrop-blur-md border border-white/10">
+  {propertyTypes.map((type) => {
+    const active = propertyType === type.value;
+
+    return (
+      <button
+        key={type.value}
+        onClick={() => setPropertyType(type.value)}
+        className={`relative px-5 py-2 rounded-full text-sm font-medium transition-all duration-300
+          ${
+            active
+              ? "bg-[#29A397] text-white shadow-[0_0_20px_rgba(41,163,151,0.45)]"
+              : "text-gray-400 hover:text-white"
+          }
+        `}
+      >
+        {type.label}
+
+        {/* Active underline */}
+        {active && (
+          <span className="absolute left-1/2 -bottom-1 w-6 h-0.5 bg-white rounded-full -translate-x-1/2" />
+        )}
+      </button>
+    );
+  })}
+</div>
+
+
+          {/* Search */}
+          <div className="flex items-center gap-2 bg-[#102826]/70 backdrop-blur-sm border border-white/10 rounded-xl px-4 py-2 max-w-md">
+            <MapPin className="h-4 w-4 text-gray-400" />
+            <input
+              placeholder="Enter city or area"
+              className="flex-1 bg-transparent text-white placeholder:text-gray-500 text-sm focus:outline-none"
+            />
+            <Button className="bg-[#29A397] hover:bg-[#228a80] text-white h-9 px-4 rounded-lg text-sm">
+              <Search className="h-4 w-4 mr-1" />
+              Search
+            </Button>
+          </div>
+
+          {/* Stats */}
+          <div className="flex gap-12 mt-10">
+            <div>
+              <div className="text-white text-2xl font-semibold">
+                9,000<span className="text-[#29A397]">+</span>
+              </div>
+              <div className="text-xs text-gray-500 mt-1">Premium Homes</div>
             </div>
-
-            {/* Headline - Magazine Style */}
-            <h1 className="text-[hsl(var(--hero-text))] font-bold tracking-tight leading-[1.08] mb-8">
-              <span className="block text-[clamp(3rem,8vw,6rem)]">Discover</span>
-              <span className="block text-[clamp(3rem,8vw,6rem)]">Your Perfect</span>
-              <span className="block text-[clamp(3rem,8vw,6rem)] relative">
-                Home
-                <span className="absolute -right-4 top-0 w-3 h-3 rounded-full bg-[hsl(var(--hero-accent))]" />
-              </span>
-            </h1>
-
-            {/* Subheadline */}
-            <p className="text-[hsl(var(--hero-text-muted))] text-lg md:text-xl leading-relaxed max-w-md mb-10">
-              AI-driven insights for smarter property decisions. Accurate pricing, location intelligence, and market trends.
-            </p>
-
-            {/* Search Bar - Pill Shape */}
-            <div className="mb-12">
-              {/* Property Type Toggle */}
-              <div className="flex gap-1 mb-4">
-                {propertyTypes.map((type) => (
-                  <button
-                    key={type.value}
-                    onClick={() => setPropertyType(type.value)}
-                    className={`px-5 py-2 text-sm font-semibold rounded-full transition-all duration-300 ${
-                      propertyType === type.value
-                        ? "bg-[hsl(var(--hero-accent))] text-[hsl(220,20%,4%)]"
-                        : "text-[hsl(var(--hero-text-muted))] hover:text-[hsl(var(--hero-text))]"
-                    }`}
-                  >
-                    {type.label}
-                  </button>
-                ))}
+            <div>
+              <div className="text-white text-2xl font-semibold">
+                2,000<span className="text-[#29A397]">+</span>
               </div>
-
-              {/* Search Input */}
-              <div className="flex items-center gap-3 bg-[hsl(0,0%,100%,0.08)] backdrop-blur-sm border border-[hsl(0,0%,100%,0.1)] rounded-full p-2 pl-6 max-w-lg">
-                <MapPin className="h-5 w-5 text-[hsl(var(--hero-text-muted))] flex-shrink-0" />
-                <input
-                  type="text"
-                  placeholder="Enter city or neighborhood..."
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="flex-1 bg-transparent text-[hsl(var(--hero-text))] placeholder:text-[hsl(var(--hero-text-muted))] focus:outline-none text-base py-2"
-                />
-                <Link to="/search">
-                  <Button 
-                    className="rounded-full bg-[hsl(var(--hero-accent))] hover:bg-[hsl(35,95%,50%)] text-[hsl(220,20%,4%)] font-semibold px-6 h-12 transition-all duration-300 hover:shadow-[0_0_30px_hsl(35,95%,55%,0.4)]"
-                  >
-                    <Search className="h-5 w-5 mr-2" />
-                    Search
-                  </Button>
-                </Link>
-              </div>
+              <div className="text-xs text-gray-500 mt-1">Happy Clients</div>
             </div>
+          </div>
+        </div>
 
-            {/* Stats - Bold & Minimal */}
-            <div className="flex gap-12">
-              <div>
-                <div className="text-[hsl(var(--hero-text))] text-4xl md:text-5xl font-bold tracking-tight">
-                  9,000<span className="text-[hsl(var(--hero-accent))]">+</span>
+        {/* RIGHT IMAGE */}
+        <div className="relative group hidden lg:block">
+          <div className="relative h-[520px] rounded-[2.5rem] overflow-hidden border border-white/5 shadow-2xl">
+            <img
+              src="https://images.unsplash.com/photo-1613490493576-7fde63acd811?q=80&w=1400&auto=format&fit=crop"
+              alt="Luxury House"
+              className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-[1.05]"
+            />
+            <div className="absolute inset-0 bg-gradient-to-t from-[#081817] via-transparent to-transparent" />
+
+            {/* Floating card */}
+            <div className="absolute bottom-6 left-6 right-6 bg-[#081817]/80 backdrop-blur-md border border-white/10 rounded-3xl p-5">
+              <p className="text-xs text-gray-400 mb-1">Featured Property</p>
+              <div className="flex justify-between items-end">
+                <div>
+                  <h3 className="text-white font-medium">
+                    Modern Villa, Malibu
+                  </h3>
+                  <p className="text-[#29A397] text-xl font-semibold mt-1">
+                    $4.2M
+                  </p>
                 </div>
-                <div className="text-[hsl(var(--hero-text-muted))] text-sm mt-1 tracking-wide">
-                  Premium Homes
-                </div>
-              </div>
-              <div>
-                <div className="text-[hsl(var(--hero-text))] text-4xl md:text-5xl font-bold tracking-tight">
-                  2,000<span className="text-[hsl(var(--hero-accent))]">+</span>
-                </div>
-                <div className="text-[hsl(var(--hero-text-muted))] text-sm mt-1 tracking-wide">
-                  Happy Clients
-                </div>
+                <Button
+                  variant="outline"
+                  className="rounded-full border-white/20 text-white hover:bg-white/10"
+                >
+                  View <ArrowRight className="ml-2 h-4 w-4" />
+                </Button>
               </div>
             </div>
           </div>
 
-          {/* Right Column - Property Image */}
-          <div className="relative hidden lg:flex items-center justify-center h-full py-16">
-            {/* Image Container with Soft Radius */}
-            <div className="relative w-full h-[85vh] max-h-[800px]">
-              {/* Main Image */}
-              <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden shadow-2xl">
-                <img
-                  src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
-                  alt="Luxury modern home"
-                  className="w-full h-full object-cover"
-                />
-                {/* Subtle gradient overlay */}
-                <div className="absolute inset-0 bg-gradient-to-t from-[hsl(220,20%,4%,0.3)] via-transparent to-transparent" />
-              </div>
-
-              {/* Floating Card - Property Info */}
-              <div className="absolute bottom-8 left-8 right-8 bg-[hsl(0,0%,100%,0.1)] backdrop-blur-xl border border-[hsl(0,0%,100%,0.15)] rounded-2xl p-6">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[hsl(var(--hero-text-muted))] text-sm mb-1">Featured Property</p>
-                    <h3 className="text-[hsl(var(--hero-text))] text-xl font-semibold">Modern Villa, Malibu</h3>
-                    <p className="text-[hsl(var(--hero-accent))] text-2xl font-bold mt-2">$4.2M</p>
-                  </div>
-                  <Link to="/property/1">
-                    <Button 
-                      variant="outline" 
-                      className="rounded-full border-[hsl(0,0%,100%,0.2)] bg-transparent text-[hsl(var(--hero-text))] hover:bg-[hsl(0,0%,100%,0.1)] hover:border-[hsl(0,0%,100%,0.3)]"
-                    >
-                      View
-                      <ArrowRight className="h-4 w-4 ml-2" />
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-
-              {/* Decorative Element - Overlapping accent */}
-              <div className="absolute -bottom-4 -right-4 w-32 h-32 rounded-full border-2 border-[hsl(var(--hero-accent),0.3)] pointer-events-none" />
-            </div>
-          </div>
-
-          {/* Mobile Image */}
-          <div className="lg:hidden relative w-full h-[50vh] -mx-4 px-4 mb-8">
-            <div className="relative w-full h-full rounded-3xl overflow-hidden">
-              <img
-                src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-                alt="Luxury modern home"
-                className="w-full h-full object-cover"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[hsl(220,20%,4%)] via-transparent to-transparent" />
-              
-              {/* Mobile Floating Card */}
-              <div className="absolute bottom-4 left-4 right-4 bg-[hsl(0,0%,100%,0.1)] backdrop-blur-xl border border-[hsl(0,0%,100%,0.15)] rounded-xl p-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-[hsl(var(--hero-text))] font-semibold">Modern Villa, Malibu</p>
-                    <p className="text-[hsl(var(--hero-accent))] text-xl font-bold">$4.2M</p>
-                  </div>
-                  <Link to="/property/1">
-                    <Button 
-                      size="sm"
-                      className="rounded-full bg-[hsl(var(--hero-accent))] hover:bg-[hsl(35,95%,50%)] text-[hsl(220,20%,4%)]"
-                    >
-                      View
-                    </Button>
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
+          {/* Decorative ring */}
+          <div className="absolute -bottom-6 -right-6 w-24 h-24 rounded-full border border-[#29A397]/30" />
         </div>
       </div>
     </section>
