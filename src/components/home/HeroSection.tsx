@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { Search, MapPin, ArrowRight, Sparkles } from "lucide-react";
+import { Search, MapPin, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
 
 type PropertyType = "buy" | "rent" | "sell";
@@ -9,7 +8,6 @@ type PropertyType = "buy" | "rent" | "sell";
 export function HeroSection() {
   const [propertyType, setPropertyType] = useState<PropertyType>("buy");
   const [location, setLocation] = useState("");
-  const [budget, setBudget] = useState([50]);
 
   const propertyTypes: { value: PropertyType; label: string }[] = [
     { value: "buy", label: "Buy" },
@@ -18,119 +16,166 @@ export function HeroSection() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 via-background to-background py-16 md:py-24 lg:py-32">
-      {/* Background Pattern */}
-      <div className="absolute inset-0 opacity-30">
-        <div className="absolute top-20 left-10 w-72 h-72 bg-primary/20 rounded-full blur-3xl" />
-        <div className="absolute bottom-20 right-10 w-96 h-96 bg-accent/20 rounded-full blur-3xl" />
-      </div>
-
-      <div className="container relative">
-        <div className="mx-auto max-w-4xl text-center">
-          {/* Badge */}
-          <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-sm font-medium text-primary mb-6 animate-fade-in">
-            <Sparkles className="h-4 w-4" />
-            AI-Powered Real Estate Intelligence
-          </div>
-
-          {/* Headline */}
-          <h1 className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-6 animate-slide-up">
-            Find Smarter Homes with{" "}
-            <span className="gradient-text">AI-Powered Insights</span>
-          </h1>
-
-          {/* Sub-headline */}
-          <p className="text-lg md:text-xl text-muted-foreground mb-10 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: "0.1s" }}>
-            Get accurate price predictions, smart location recommendations, and fraud detection. 
-            Make confident property decisions backed by machine learning.
-          </p>
-
-          {/* Search Card */}
-          <Card variant="glass" className="p-6 md:p-8 mx-auto max-w-3xl animate-scale-in" style={{ animationDelay: "0.2s" }}>
-            {/* Property Type Toggle */}
-            <div className="flex justify-center gap-2 mb-6">
-              {propertyTypes.map((type) => (
-                <button
-                  key={type.value}
-                  onClick={() => setPropertyType(type.value)}
-                  className={`px-6 py-2.5 rounded-lg text-sm font-semibold transition-all ${
-                    propertyType === type.value
-                      ? "bg-primary text-primary-foreground shadow-md"
-                      : "bg-muted text-muted-foreground hover:bg-muted/80"
-                  }`}
-                >
-                  {type.label}
-                </button>
-              ))}
+    <section className="relative min-h-screen overflow-hidden bg-gradient-to-br from-[hsl(220,20%,4%)] via-[hsl(220,18%,8%)] to-[hsl(220,15%,12%)]">
+      {/* Subtle ambient glow */}
+      <div className="absolute top-1/4 left-1/4 w-[600px] h-[600px] bg-primary/5 rounded-full blur-[150px] pointer-events-none" />
+      
+      <div className="container relative h-full min-h-screen">
+        <div className="grid lg:grid-cols-[45%_55%] min-h-screen items-center gap-8 lg:gap-0">
+          
+          {/* Left Column - Text & Search */}
+          <div className="pt-32 pb-16 lg:py-0 lg:pr-16 xl:pr-24">
+            {/* Editorial Accent */}
+            <div className="flex items-center gap-3 mb-8">
+              <div className="w-2 h-2 rounded-full bg-[hsl(var(--hero-accent))]" />
+              <span className="text-[hsl(var(--hero-text-muted))] text-sm font-medium tracking-widest uppercase">
+                AI-Powered Real Estate
+              </span>
             </div>
 
-            {/* Search Form */}
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                <input
-                  type="text"
-                  placeholder="Enter location, city, or neighborhood"
-                  value={location}
-                  onChange={(e) => setLocation(e.target.value)}
-                  className="w-full h-12 pl-12 pr-4 rounded-lg border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
-                />
+            {/* Headline - Magazine Style */}
+            <h1 className="text-[hsl(var(--hero-text))] font-bold tracking-tight leading-[1.08] mb-8">
+              <span className="block text-[clamp(3rem,8vw,6rem)]">Discover</span>
+              <span className="block text-[clamp(3rem,8vw,6rem)]">Your Perfect</span>
+              <span className="block text-[clamp(3rem,8vw,6rem)] relative">
+                Home
+                <span className="absolute -right-4 top-0 w-3 h-3 rounded-full bg-[hsl(var(--hero-accent))]" />
+              </span>
+            </h1>
+
+            {/* Subheadline */}
+            <p className="text-[hsl(var(--hero-text-muted))] text-lg md:text-xl leading-relaxed max-w-md mb-10">
+              AI-driven insights for smarter property decisions. Accurate pricing, location intelligence, and market trends.
+            </p>
+
+            {/* Search Bar - Pill Shape */}
+            <div className="mb-12">
+              {/* Property Type Toggle */}
+              <div className="flex gap-1 mb-4">
+                {propertyTypes.map((type) => (
+                  <button
+                    key={type.value}
+                    onClick={() => setPropertyType(type.value)}
+                    className={`px-5 py-2 text-sm font-semibold rounded-full transition-all duration-300 ${
+                      propertyType === type.value
+                        ? "bg-[hsl(var(--hero-accent))] text-[hsl(220,20%,4%)]"
+                        : "text-[hsl(var(--hero-text-muted))] hover:text-[hsl(var(--hero-text))]"
+                    }`}
+                  >
+                    {type.label}
+                  </button>
+                ))}
               </div>
 
-              <div className="flex-1">
-                <div className="h-12 px-4 rounded-lg border bg-background flex items-center gap-4">
-                  <span className="text-sm text-muted-foreground whitespace-nowrap">Budget:</span>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={budget[0]}
-                    onChange={(e) => setBudget([parseInt(e.target.value)])}
-                    className="flex-1 accent-primary"
-                  />
-                  <span className="text-sm font-medium whitespace-nowrap">
-                    ${budget[0]}L+
-                  </span>
+              {/* Search Input */}
+              <div className="flex items-center gap-3 bg-[hsl(0,0%,100%,0.08)] backdrop-blur-sm border border-[hsl(0,0%,100%,0.1)] rounded-full p-2 pl-6 max-w-lg">
+                <MapPin className="h-5 w-5 text-[hsl(var(--hero-text-muted))] flex-shrink-0" />
+                <input
+                  type="text"
+                  placeholder="Enter city or neighborhood..."
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  className="flex-1 bg-transparent text-[hsl(var(--hero-text))] placeholder:text-[hsl(var(--hero-text-muted))] focus:outline-none text-base py-2"
+                />
+                <Link to="/search">
+                  <Button 
+                    className="rounded-full bg-[hsl(var(--hero-accent))] hover:bg-[hsl(35,95%,50%)] text-[hsl(220,20%,4%)] font-semibold px-6 h-12 transition-all duration-300 hover:shadow-[0_0_30px_hsl(35,95%,55%,0.4)]"
+                  >
+                    <Search className="h-5 w-5 mr-2" />
+                    Search
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Stats - Bold & Minimal */}
+            <div className="flex gap-12">
+              <div>
+                <div className="text-[hsl(var(--hero-text))] text-4xl md:text-5xl font-bold tracking-tight">
+                  9,000<span className="text-[hsl(var(--hero-accent))]">+</span>
+                </div>
+                <div className="text-[hsl(var(--hero-text-muted))] text-sm mt-1 tracking-wide">
+                  Premium Homes
+                </div>
+              </div>
+              <div>
+                <div className="text-[hsl(var(--hero-text))] text-4xl md:text-5xl font-bold tracking-tight">
+                  2,000<span className="text-[hsl(var(--hero-accent))]">+</span>
+                </div>
+                <div className="text-[hsl(var(--hero-text-muted))] text-sm mt-1 tracking-wide">
+                  Happy Clients
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column - Property Image */}
+          <div className="relative hidden lg:flex items-center justify-center h-full py-16">
+            {/* Image Container with Soft Radius */}
+            <div className="relative w-full h-[85vh] max-h-[800px]">
+              {/* Main Image */}
+              <div className="absolute inset-0 rounded-[2.5rem] overflow-hidden shadow-2xl">
+                <img
+                  src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
+                  alt="Luxury modern home"
+                  className="w-full h-full object-cover"
+                />
+                {/* Subtle gradient overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-[hsl(220,20%,4%,0.3)] via-transparent to-transparent" />
+              </div>
+
+              {/* Floating Card - Property Info */}
+              <div className="absolute bottom-8 left-8 right-8 bg-[hsl(0,0%,100%,0.1)] backdrop-blur-xl border border-[hsl(0,0%,100%,0.15)] rounded-2xl p-6">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[hsl(var(--hero-text-muted))] text-sm mb-1">Featured Property</p>
+                    <h3 className="text-[hsl(var(--hero-text))] text-xl font-semibold">Modern Villa, Malibu</h3>
+                    <p className="text-[hsl(var(--hero-accent))] text-2xl font-bold mt-2">$4.2M</p>
+                  </div>
+                  <Link to="/property/1">
+                    <Button 
+                      variant="outline" 
+                      className="rounded-full border-[hsl(0,0%,100%,0.2)] bg-transparent text-[hsl(var(--hero-text))] hover:bg-[hsl(0,0%,100%,0.1)] hover:border-[hsl(0,0%,100%,0.3)]"
+                    >
+                      View
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </Link>
                 </div>
               </div>
 
-              <Link to="/search">
-                <Button variant="hero" size="lg" className="h-12 w-full md:w-auto">
-                  <Search className="h-5 w-5" />
-                  Search
-                </Button>
-              </Link>
+              {/* Decorative Element - Overlapping accent */}
+              <div className="absolute -bottom-4 -right-4 w-32 h-32 rounded-full border-2 border-[hsl(var(--hero-accent),0.3)] pointer-events-none" />
             </div>
-          </Card>
-
-          {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row justify-center gap-4 mt-8 animate-fade-in" style={{ animationDelay: "0.3s" }}>
-            <Link to="/search">
-              <Button variant="hero" size="lg">
-                Explore Properties
-                <ArrowRight className="h-5 w-5" />
-              </Button>
-            </Link>
-            <Link to="/list-property">
-              <Button variant="heroOutline" size="lg">
-                List Your Property
-              </Button>
-            </Link>
           </div>
 
-          {/* Stats */}
-          <div className="grid grid-cols-3 gap-8 mt-16 pt-8 border-t border-border/50 animate-fade-in" style={{ animationDelay: "0.4s" }}>
-            <div>
-              <div className="text-3xl md:text-4xl font-bold text-primary">50K+</div>
-              <div className="text-sm text-muted-foreground mt-1">Properties Listed</div>
-            </div>
-            <div>
-              <div className="text-3xl md:text-4xl font-bold text-primary">95%</div>
-              <div className="text-sm text-muted-foreground mt-1">Price Accuracy</div>
-            </div>
-            <div>
-              <div className="text-3xl md:text-4xl font-bold text-primary">10K+</div>
-              <div className="text-sm text-muted-foreground mt-1">Happy Users</div>
+          {/* Mobile Image */}
+          <div className="lg:hidden relative w-full h-[50vh] -mx-4 px-4 mb-8">
+            <div className="relative w-full h-full rounded-3xl overflow-hidden">
+              <img
+                src="https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+                alt="Luxury modern home"
+                className="w-full h-full object-cover"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-[hsl(220,20%,4%)] via-transparent to-transparent" />
+              
+              {/* Mobile Floating Card */}
+              <div className="absolute bottom-4 left-4 right-4 bg-[hsl(0,0%,100%,0.1)] backdrop-blur-xl border border-[hsl(0,0%,100%,0.15)] rounded-xl p-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-[hsl(var(--hero-text))] font-semibold">Modern Villa, Malibu</p>
+                    <p className="text-[hsl(var(--hero-accent))] text-xl font-bold">$4.2M</p>
+                  </div>
+                  <Link to="/property/1">
+                    <Button 
+                      size="sm"
+                      className="rounded-full bg-[hsl(var(--hero-accent))] hover:bg-[hsl(35,95%,50%)] text-[hsl(220,20%,4%)]"
+                    >
+                      View
+                    </Button>
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </div>
