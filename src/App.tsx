@@ -10,6 +10,7 @@ import Dashboard from "./pages/Dashboard";
 import SavedProperties from "./pages/SavedProperties";
 import ListProperty from "./pages/ListProperty"; // 1. ADD THIS IMPORT
 import NotFound from "./pages/NotFound";
+import { RecommendationsPage } from "./pages/RecommendationsPage";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/search" element={<SearchResults />} />
+          <Route path="/recommendations" element={<RecommendationsPage />} />
           <Route path="/property/:id" element={<PropertyDetails />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/saved" element={<SavedProperties />} />
