@@ -8,6 +8,7 @@ import SearchResults from "./pages/SearchResults";
 import PropertyDetails from "./pages/PropertyDetails";
 import Dashboard from "./pages/Dashboard";
 import SavedProperties from "./pages/SavedProperties";
+import ListProperty from "./pages/ListProperty"; // 1. ADD THIS IMPORT
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -24,6 +25,10 @@ const App = () => (
           <Route path="/property/:id" element={<PropertyDetails />} />
           <Route path="/dashboard" element={<Dashboard />} />
           <Route path="/saved" element={<SavedProperties />} />
+          
+          {/* 2. ADD THE LIST PROPERTY ROUTE HERE */}
+          <Route path="/list-property" element={<ListProperty />} />
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
