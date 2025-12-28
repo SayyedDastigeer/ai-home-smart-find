@@ -1,14 +1,14 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Home, Search, Heart, User, Menu, X, Sparkles } from "lucide-react";
+import { Home, Search, Heart, User, Menu, X, Sparkles,PlusSquare  } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
   { href: "/", label: "Home", icon: Home },
   { href: "/search", label: "Search", icon: Search },
   { href: "/recommendations", label: "AI Recommendations", icon: Sparkles  },
-  { href: "/list-property", label: "List Property", icon: Sparkles },
+  { href: "/list-property", label: "List Property", icon: PlusSquare  },
   { href: "/saved", label: "Saved", icon: Heart },
   { href: "/dashboard", label: "Dashboard", icon: User },
 ];
