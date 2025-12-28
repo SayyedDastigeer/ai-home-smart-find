@@ -1,18 +1,27 @@
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+
 import Index from "./pages/Index";
+import Dashboard from "./pages/Dashboard";
+import Auth from "./pages/Auth";
 import SearchResults from "./pages/SearchResults";
 import PropertyDetails from "./pages/PropertyDetails";
-import Dashboard from "./pages/Dashboard";
 import SavedProperties from "./pages/SavedProperties";
-import ListProperty from "./pages/ListProperty"; // 1. ADD THIS IMPORT
+import ListProperty from "./pages/ListProperty";
 import NotFound from "./pages/NotFound";
 import { RecommendationsPage } from "./pages/RecommendationsPage";
 
+import { useAuth } from "@/context/AuthContext";
+
 const queryClient = new QueryClient();
+
+const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
+  const { user } = useAuth();
+  return user ? children : <Navigate to="/auth" replace />;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -21,17 +30,39 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public */}
           <Route path="/" element={<Index />} />
+          <Route path="/auth" element={<Auth />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/recommendations" element={<RecommendationsPage />} />
           <Route path="/property/:id" element={<PropertyDetails />} />
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/saved" element={<SavedProperties />} />
-          
-          {/* 2. ADD THE LIST PROPERTY ROUTE HERE */}
-          <Route path="/list-property" element={<ListProperty />} />
 
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+          {/* Protected */}
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/saved"
+            element={
+              <ProtectedRoute>
+                <SavedProperties />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/list-property"
+            element={
+              <ProtectedRoute>
+                <ListProperty />
+              </ProtectedRoute>
+            }
+          />
+
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
