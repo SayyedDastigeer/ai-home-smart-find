@@ -20,6 +20,7 @@ const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { user } = useAuth();
+  // Redirect to Auth if no user is found in context
   return user ? children : <Navigate to="/auth" replace />;
 };
 
@@ -28,16 +29,24 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      <BrowserRouter>
+      {/* Updated BrowserRouter with Future Flags to suppress 
+        React Router v7 console warnings 
+      */}
+      <BrowserRouter 
+        future={{ 
+          v7_startTransition: true, 
+          v7_relativeSplatPath: true 
+        }}
+      >
         <Routes>
-          {/* Public */}
+          {/* Public Routes */}
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/search" element={<SearchResults />} />
           <Route path="/recommendations" element={<RecommendationsPage />} />
           <Route path="/property/:id" element={<PropertyDetails />} />
 
-          {/* Protected */}
+          {/* Protected Routes - Only accessible when logged in */}
           <Route
             path="/dashboard"
             element={
@@ -63,6 +72,7 @@ const App = () => (
             }
           />
 
+          {/* 404 Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
