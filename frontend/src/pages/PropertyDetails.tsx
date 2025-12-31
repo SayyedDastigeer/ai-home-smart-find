@@ -165,7 +165,7 @@ const PropertyDetails = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    {(property.amenities || amenities).map((item: string) => (
+                    {(property.amenities || []).map((item: string) => (
                       <div key={item} className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-background/40">
                         <Check className="h-4 w-4 text-green-500" />
                         <span className="text-sm font-medium">{item}</span>
