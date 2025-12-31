@@ -114,3 +114,48 @@ exports.rentProperty = async (req, res) => {
     res.status(500).json({ message: "Rental failed" });
   }
 };
+exports.toggleSaveProperty = async (req, res) => {
+  try {
+    const userId = req.userId;
+    const { propertyId } = req.params;
+
+    const property = await Property.findById(propertyId);
+    if (!property) {
+      return res.status(404).json({ message: "Property not found" });
+    }
+
+    const user = await User.findById(userId);
+
+    const index = user.savedProperties.indexOf(propertyId);
+
+    if (index > -1) {
+      user.savedProperties.splice(index, 1);
+      await user.save();
+      return res.json({ saved: false });
+    }
+
+    user.savedProperties.push(propertyId);
+    await user.save();
+
+    res.json({ saved: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+exports.getSavedProperties = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId)
+      .populate("savedProperties"); // IMPORTANT
+
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.status(200).json(user.savedProperties);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+};

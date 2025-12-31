@@ -9,6 +9,7 @@ const userSchema = new mongoose.Schema(
     listedProperties: [{ type: mongoose.Schema.Types.ObjectId, ref: "Property" }],
     boughtProperties: [{ type: mongoose.Schema.Types.ObjectId, ref: "Property" }],
     rentedProperties: [{ type: mongoose.Schema.Types.ObjectId, ref: "Property" }],
+    savedProperties: [{ type: mongoose.Schema.Types.ObjectId, ref: "Property" }],
     givenOnRent: [{ type: mongoose.Schema.Types.ObjectId, ref: "Property" }],
   },
   { timestamps: true }
