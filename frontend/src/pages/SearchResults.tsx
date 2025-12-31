@@ -7,40 +7,63 @@ import { PropertyCard } from "@/components/property/PropertyCard";
 import { AIChatWidget } from "@/components/chat/AIChatWidget";
 import { Button } from "@/components/ui/button";
 import { SlidersHorizontal, X } from "lucide-react";
-import { cn } from "@/lib/utils";
 
 const SearchResults = () => {
-  const [properties, setProperties] = useState<any[]>([]);
+  const [properties, setProperties] = useState([]);
+  const [savedIds, setSavedIds] = useState([]); // 🔥 IMPORTANT
   const [loading, setLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
 
-  // This function is triggered by the SearchFilters "Apply" button
-  const fetchProperties = async (filters: any = {}) => {
+  const token = localStorage.getItem("token");
+
+  // 🔹 Fetch saved properties of user
+  const fetchSavedProperties = async () => {
+    if (!token) return;
+
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/properties/saved-properties",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      setSavedIds(res.data.map((p) => p._id));
+    } catch (err) {
+      console.error("Failed to fetch saved properties", err);
+    }
+  };
+
+  // 🔹 Fetch search properties
+  const fetchProperties = async (filters = {}) => {
     setLoading(true);
     try {
       const params = new URLSearchParams();
-      Object.entries(filters).forEach(([key, value]) => {
-        if (value) params.append(key, value.toString());
+      Object.entries(filters).forEach(([k, v]) => {
+        if (v) params.append(k, v.toString());
       });
 
-      // Matches the backend route we discussed earlier
-      const res = await axios.get(`http://localhost:5000/api/properties?${params.toString()}`);
+      const res = await axios.get(
+        `http://localhost:5000/api/properties?${params.toString()}`
+      );
+
       setProperties(res.data);
-    } catch (error) {
-      console.error("Error fetching properties:", error);
+    } catch (err) {
+      console.error("Error fetching properties", err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchProperties(); // Fetch all properties on initial load
+    fetchProperties();
+    fetchSavedProperties(); // 🔥 REQUIRED
   }, []);
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
-      
+
       <main className="flex-1">
         <div className="container py-6">
           <div className="flex items-center justify-between mb-6">
@@ -51,32 +74,21 @@ const SearchResults = () => {
           </div>
 
           <div className="flex gap-6">
-            {/* Desktop Filters */}
-            <aside className="hidden lg:block w-72 shrink-0">
+            <aside className="hidden lg:block w-72">
               <SearchFilters onApply={fetchProperties} />
             </aside>
 
-            {/* Mobile Filters Overlay */}
-            {showFilters && (
-              <div className="fixed inset-0 z-50 lg:hidden bg-background p-6">
-                <div className="flex justify-between mb-6">
-                  <h2 className="text-lg font-semibold">Filters</h2>
-                  <Button variant="ghost" onClick={() => setShowFilters(false)}><X /></Button>
-                </div>
-                <SearchFilters onApply={(f) => { fetchProperties(f); setShowFilters(false); }} />
-              </div>
-            )}
-
             <div className="flex-1">
               {loading ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                  {/* Optional: Add skeleton loaders here */}
-                  <p>Loading...</p>
-                </div>
+                <p>Loading...</p>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                   {properties.map((p) => (
-                    <PropertyCard key={p._id} property={p} />
+                    <PropertyCard
+                      key={p._id}
+                      property={p}
+                      initiallySaved={savedIds.includes(p._id)} // 🔥 MAGIC
+                    />
                   ))}
                 </div>
               )}
