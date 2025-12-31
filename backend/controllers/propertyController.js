@@ -1,19 +1,23 @@
 const Property = require("../models/Property");
 const User = require("../models/User");
 
-// GET: Fetch properties with filters
+// GET: Fetch all properties with dynamic filters
 exports.getProperties = async (req, res) => {
   try {
     const { minPrice, maxPrice, type, bedrooms } = req.query;
     let query = { status: "available" };
 
     if (type) query.type = type;
+    
     if (minPrice || maxPrice) {
       query.price = {};
       if (minPrice) query.price.$gte = Number(minPrice);
       if (maxPrice) query.price.$lte = Number(maxPrice);
     }
-    if (bedrooms) query.bedrooms = { $gte: Number(bedrooms) };
+
+    if (bedrooms) {
+      query.bedrooms = { $gte: Number(bedrooms) };
+    }
 
     const properties = await Property.find(query).sort({ createdAt: -1 });
     res.json(properties);
@@ -22,31 +26,49 @@ exports.getProperties = async (req, res) => {
   }
 };
 
-// POST: List a new property (with Cloudinary images)
+// GET: Fetch a single property by ID (Fixes your 404 error)
+exports.getPropertyById = async (req, res) => {
+  try {
+    const property = await Property.findById(req.params.id);
+    
+    if (!property) {
+      return res.status(404).json({ message: "Property not found" });
+    }
+    
+    res.json(property);
+  } catch (error) {
+    console.error("Error fetching single property:", error);
+    res.status(500).json({ message: "Server Error", error: error.message });
+  }
+};
+
+// POST: Create a new listing with images
 exports.listProperty = async (req, res) => {
   try {
-    // 1. Parse amenities if they come as a string from FormData
-    const amenities = req.body.amenities ? JSON.parse(req.body.amenities) : [];
-
-    // 2. Get image URLs from Multer (populated by Cloudinary)
+    // Collect Cloudinary URLs from Multer
     const imageUrls = req.files ? req.files.map((file) => file.path) : [];
 
-    // 3. Create the property
+    // Parse amenities string from FormData back into an array
+    const amenities = req.body.amenities ? JSON.parse(req.body.amenities) : [];
+
     const property = await Property.create({
       ...req.body,
-      amenities,
+      price: Number(req.body.price),
+      bedrooms: Number(req.body.bedrooms),
+      bathrooms: Number(req.body.bathrooms),
+      area: Number(req.body.area),
+      amenities: amenities,
       images: imageUrls,
-      owner: req.userId, // Ensure your authMiddleware sets req.userId
+      owner: req.userId,
     });
 
-    // 4. Update user's listedProperties array
     await User.findByIdAndUpdate(req.userId, {
       $push: { listedProperties: property._id },
     });
 
     res.status(201).json(property);
   } catch (error) {
-    console.error("List Property Error:", error);
+    console.error("Listing error:", error);
     res.status(400).json({ message: "Error listing property", error: error.message });
   }
 };
@@ -55,18 +77,18 @@ exports.listProperty = async (req, res) => {
 exports.buyProperty = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
-    if (!property) return res.status(404).json({ message: "Property not found" });
-
+    if (!property) return res.status(404).json({ message: "Not found" });
+    
     property.status = "sold";
     await property.save();
-
-    await User.findByIdAndUpdate(req.userId, {
-      $push: { boughtProperties: property._id },
+    
+    await User.findByIdAndUpdate(req.userId, { 
+      $push: { boughtProperties: property._id } 
     });
-
+    
     res.json({ message: "Property bought" });
   } catch (error) {
-    res.status(500).json({ message: "Purchase failed", error });
+    res.status(500).json({ message: "Purchase failed" });
   }
 };
 
@@ -74,21 +96,21 @@ exports.buyProperty = async (req, res) => {
 exports.rentProperty = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
-    if (!property) return res.status(404).json({ message: "Property not found" });
-
+    if (!property) return res.status(404).json({ message: "Not found" });
+    
     property.status = "rented";
     await property.save();
-
-    await User.findByIdAndUpdate(req.userId, {
-      $push: { rentedProperties: property._id },
+    
+    await User.findByIdAndUpdate(req.userId, { 
+      $push: { rentedProperties: property._id } 
     });
-
-    await User.findByIdAndUpdate(property.owner, {
-      $push: { givenOnRent: property._id },
+    
+    await User.findByIdAndUpdate(property.owner, { 
+      $push: { givenOnRent: property._id } 
     });
-
+    
     res.json({ message: "Property rented" });
   } catch (error) {
-    res.status(500).json({ message: "Rental failed", error });
+    res.status(500).json({ message: "Rental failed" });
   }
-}; // Fixed: All braces now closed correctly
+};

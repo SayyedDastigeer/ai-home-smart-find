@@ -3,11 +3,12 @@ const auth = require("../middleware/authMiddleware");
 const multer = require("multer");
 const { storage } = require("../config/cloudinary");
 
-// Initialize multer with Cloudinary storage configuration
+// Initialize multer with Cloudinary storage
 const upload = multer({ storage });
 
 const {
   getProperties,
+  getPropertyById,
   listProperty,
   buyProperty,
   rentProperty,
@@ -15,32 +16,14 @@ const {
 
 const router = express.Router();
 
-/**
- * @route   GET /api/properties
- * @desc    Fetch all properties with dynamic filters (Price, Type, etc.)
- * @access  Public
- */
+// Public routes
 router.get("/", getProperties);
+router.get("/:id", getPropertyById); // Missing route added here
 
-/**
- * @route   POST /api/properties
- * @desc    Create a new property listing with up to 5 images
- * @access  Protected (Auth + Multer Middleware)
- */
+// Protected routes
+// upload.array("images", 5) matches the name used in your frontend FormData
 router.post("/", auth, upload.array("images", 5), listProperty);
-
-/**
- * @route   POST /api/properties/buy/:id
- * @desc    Process property purchase
- * @access  Protected
- */
 router.post("/buy/:id", auth, buyProperty);
-
-/**
- * @route   POST /api/properties/rent/:id
- * @desc    Process property rental
- * @access  Protected
- */
 router.post("/rent/:id", auth, rentProperty);
 
 module.exports = router;
