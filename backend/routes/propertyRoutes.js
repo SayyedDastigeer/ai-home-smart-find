@@ -2,9 +2,7 @@ const express = require("express");
 const auth = require("../middleware/authMiddleware");
 const multer = require("multer");
 const { storage } = require("../config/cloudinary");
-
 const upload = multer({ storage });
-
 const {
   getProperties,
   getPropertyById,
@@ -18,24 +16,18 @@ const {
 
 const router = express.Router();
 
-// --------------------
-// SAVED PROPERTIES
-// --------------------
+// 1. SAVED PROPERTIES (Specific)
 router.get("/saved-properties", auth, getSavedProperties);
 router.delete("/clear-saved", auth, clearSavedProperties);
 router.post("/save-property/:propertyId", auth, toggleSaveProperty);
 
-// --------------------
-// PROPERTIES
-// --------------------
+// 2. PROPERTIES (General)
 router.get("/", getProperties);
 router.post("/", auth, upload.array("images", 5), listProperty);
 router.post("/buy/:id", auth, buyProperty);
 router.post("/rent/:id", auth, rentProperty);
 
-// --------------------
-// SINGLE PROPERTY (ALWAYS LAST)
-// --------------------
+// 3. SINGLE PROPERTY (Must be last)
 router.get("/:id", getPropertyById);
 
 module.exports = router;
