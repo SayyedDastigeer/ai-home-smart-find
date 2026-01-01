@@ -3,8 +3,6 @@ const auth = require("../middleware/authMiddleware");
 const multer = require("multer");
 const { storage } = require("../config/cloudinary");
 
-
-// Initialize multer with Cloudinary storage
 const upload = multer({ storage });
 
 const {
@@ -13,22 +11,31 @@ const {
   listProperty,
   buyProperty,
   rentProperty,
-   getSavedProperties,
-   toggleSaveProperty
+  getSavedProperties,
+  toggleSaveProperty,
+  clearSavedProperties,
 } = require("../controllers/propertyController");
 
 const router = express.Router();
 
-// Public routes
-router.get("/", getProperties);
+// --------------------
+// SAVED PROPERTIES
+// --------------------
 router.get("/saved-properties", auth, getSavedProperties);
-router.get("/:id", getPropertyById); // Missing route added here
+router.delete("/clear-saved", auth, clearSavedProperties);
+router.post("/save-property/:propertyId", auth, toggleSaveProperty);
 
-// Protected routes
-// upload.array("images", 5) matches the name used in your frontend FormData
+// --------------------
+// PROPERTIES
+// --------------------
+router.get("/", getProperties);
 router.post("/", auth, upload.array("images", 5), listProperty);
 router.post("/buy/:id", auth, buyProperty);
 router.post("/rent/:id", auth, rentProperty);
-router.post("/save-property/:propertyId", auth, toggleSaveProperty);
+
+// --------------------
+// SINGLE PROPERTY (ALWAYS LAST)
+// --------------------
+router.get("/:id", getPropertyById);
 
 module.exports = router;

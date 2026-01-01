@@ -126,7 +126,9 @@ exports.toggleSaveProperty = async (req, res) => {
 
     const user = await User.findById(userId);
 
-    const index = user.savedProperties.indexOf(propertyId);
+const index = user.savedProperties.findIndex(
+  (id) => id.toString() === propertyId
+);
 
     if (index > -1) {
       user.savedProperties.splice(index, 1);
@@ -157,5 +159,26 @@ exports.getSavedProperties = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Server error" });
+  }
+};
+
+
+
+// CLEAR ALL SAVED PROPERTIES
+exports.clearSavedProperties = async (req, res) => {
+  try {
+    const user = await User.findById(req.userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    user.savedProperties = [];
+    await user.save();
+
+    res.status(200).json({ message: "All saved properties cleared" });
+  } catch (error) {
+    console.error("Clear saved error:", error);
+    res.status(500).json({ message: "Failed to clear saved properties" });
   }
 };
