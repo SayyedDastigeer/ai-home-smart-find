@@ -9,32 +9,68 @@ import { Button } from "@/components/ui/button";
 import { Heart, Scale, Trash2 } from "lucide-react";
 
 const SavedProperties = () => {
-  const [properties, setProperties] = useState([]);
+  const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchSaved = async () => {
-      try {
-        const token = localStorage.getItem("token");
+  const token = localStorage.getItem("token");
 
-        const res = await axios.get(
-          "http://localhost:5000/api/properties/saved-properties",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+  const fetchSavedProperties = async () => {
+    if (!token) return;
+    setLoading(true);
+    try {
+      const res = await axios.get(
+        "http://localhost:5000/api/properties/saved-properties",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      setProperties(res.data);
+    } catch (err) {
+      console.error("Failed to load saved properties", err);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-        setProperties(res.data);
-      } catch (err) {
-        console.error("Failed to load saved properties", err);
-      } finally {
-        setLoading(false);
+  const handleToggleSave = async (propertyId: string, newState: boolean) => {
+    if (!token) return;
+
+    try {
+      await axios.post(
+        `http://localhost:5000/api/properties/save-property/${propertyId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // If unsaved, remove property from list immediately
+      if (!newState) {
+        setProperties((prev) => prev.filter((p) => p._id !== propertyId));
       }
-    };
+    } catch (err) {
+      console.error("Failed to toggle save", err);
+    }
+  };
 
-    fetchSaved();
+  const handleClearAll = async () => {
+    if (!token) return;
+    try {
+      await Promise.all(
+        properties.map((p) =>
+          axios.post(
+            `http://localhost:5000/api/properties/save-property/${p._id}`,
+            {},
+            { headers: { Authorization: `Bearer ${token}` } }
+          )
+        )
+      );
+      setProperties([]);
+    } catch (err) {
+      console.error("Failed to clear all", err);
+    }
+  };
+
+  useEffect(() => {
+    fetchSavedProperties();
   }, []);
 
   return (
@@ -63,7 +99,7 @@ const SavedProperties = () => {
               <Button
                 variant="outline"
                 className="text-destructive hover:text-destructive"
-                onClick={() => setProperties([])} // frontend clear only
+                onClick={handleClearAll}
               >
                 <Trash2 className="h-4 w-4" />
                 Clear All
@@ -84,6 +120,7 @@ const SavedProperties = () => {
                   key={property._id}
                   property={property}
                   initiallySaved={true}
+                  onToggleSave={handleToggleSave}
                 />
               ))}
             </div>
