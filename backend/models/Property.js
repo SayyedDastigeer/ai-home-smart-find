@@ -2,18 +2,36 @@ const mongoose = require("mongoose");
 
 const propertySchema = new mongoose.Schema(
   {
-    title: { type: String, required: true },
-    location: { type: String, required: true },
-    price: { type: Number, required: true },
-    type: { type: String, enum: ["sell", "rent"], required: true },
-    // Added fields for search filtering
+    title: String,
+    location: String,
+    price: Number,
+    type: { type: String, enum: ["sell", "rent"] },
+
     bedrooms: Number,
     bathrooms: Number,
     area: Number,
     images: [String],
-    description: String,
     amenities: [String],
-    owner: { type: mongoose.Schema.Types.ObjectId, ref: "User" },
+    description: String,
+
+    owner: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      required: true,
+    },
+
+    buyer: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
+    renter: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+
     status: {
       type: String,
       enum: ["available", "sold", "rented"],

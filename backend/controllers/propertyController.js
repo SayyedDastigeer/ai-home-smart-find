@@ -79,8 +79,10 @@ exports.buyProperty = async (req, res) => {
     const property = await Property.findById(req.params.id);
     if (!property) return res.status(404).json({ message: "Not found" });
     
-    property.status = "sold";
-    await property.save();
+property.status = "sold";
+property.buyer = req.userId;
+await property.save();
+
     
     await User.findByIdAndUpdate(req.userId, { 
       $push: { boughtProperties: property._id } 
@@ -98,8 +100,10 @@ exports.rentProperty = async (req, res) => {
     const property = await Property.findById(req.params.id);
     if (!property) return res.status(404).json({ message: "Not found" });
     
-    property.status = "rented";
-    await property.save();
+   property.status = "rented";
+property.renter = req.userId;
+await property.save();
+
     
     await User.findByIdAndUpdate(req.userId, { 
       $push: { rentedProperties: property._id } 
