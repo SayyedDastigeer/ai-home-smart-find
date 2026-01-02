@@ -25,7 +25,14 @@ const propertySchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
-
+ // ... existing fields
+    type: { type: String, enum: ["sell", "rent"] }, 
+    status: {
+      type: String,
+      enum: ["available", "sold", "rented"],
+      default: "available",
+    },
+// ...
     renter: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

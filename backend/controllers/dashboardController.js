@@ -1,36 +1,16 @@
 const Property = require("../models/Property");
 const User = require("../models/User");
-
 exports.getDashboard = async (req, res) => {
   try {
     const userId = req.userId;
+    const user = await User.findById(userId).select("name email savedProperties").lean();
 
-    // USER BASIC INFO
-    const user = await User.findById(userId)
-      .select("name email savedProperties")
-      .lean();
+    if (!user) return res.status(404).json({ message: "User not found" });
 
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
-
-    // 🔥 REAL COUNTS FROM PROPERTY COLLECTION
-    const [
-      listedCount,
-      boughtCount,
-      rentedCount,
-      givenOnRentCount,
-    ] = await Promise.all([
-      // Properties THIS USER listed
+    const [listedCount, boughtCount, rentedCount, givenOnRentCount] = await Promise.all([
       Property.countDocuments({ owner: userId }),
-
-      // Properties THIS USER bought
       Property.countDocuments({ buyer: userId }),
-
-      // Properties THIS USER rented
       Property.countDocuments({ renter: userId }),
-
-      // Properties THIS USER gave on rent
       Property.countDocuments({ owner: userId, status: "rented" }),
     ]);
 
@@ -41,10 +21,9 @@ exports.getDashboard = async (req, res) => {
       boughtCount,
       rentedCount,
       givenOnRentCount,
-      savedCount: user.savedProperties.length,
+      savedCount: user.savedProperties ? user.savedProperties.length : 0,
     });
   } catch (err) {
-    console.error("Dashboard error:", err);
     res.status(500).json({ message: "Failed to load dashboard" });
   }
 };
