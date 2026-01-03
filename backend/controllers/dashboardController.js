@@ -1,5 +1,6 @@
 const Property = require("../models/Property");
 const User = require("../models/User");
+
 exports.getDashboard = async (req, res) => {
   try {
     const userId = req.userId;
@@ -7,10 +8,15 @@ exports.getDashboard = async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
+    // Precise counts based on specific status and roles
     const [listedCount, boughtCount, rentedCount, givenOnRentCount] = await Promise.all([
+      // Total properties listed by the user (regardless of status)
       Property.countDocuments({ owner: userId }),
-      Property.countDocuments({ buyer: userId }),
-      Property.countDocuments({ renter: userId }),
+      // Properties successfully purchased by the user
+      Property.countDocuments({ buyer: userId, status: "sold" }),
+      // Properties currently rented by the user
+      Property.countDocuments({ renter: userId, status: "rented" }),
+      // Properties owned by user that are currently occupied by a tenant (Income source)
       Property.countDocuments({ owner: userId, status: "rented" }),
     ]);
 
@@ -24,6 +30,7 @@ exports.getDashboard = async (req, res) => {
       savedCount: user.savedProperties ? user.savedProperties.length : 0,
     });
   } catch (err) {
-    res.status(500).json({ message: "Failed to load dashboard" });
+    console.error("Dashboard Stats Error:", err);
+    res.status(500).json({ message: "Failed to load dashboard statistics" });
   }
 };
