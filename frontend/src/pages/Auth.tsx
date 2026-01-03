@@ -8,6 +8,7 @@ const Auth = () => {
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [phone, setPhone] = useState(""); // ADDED: Phone state
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -22,10 +23,11 @@ const Auth = () => {
 
     try {
       if (mode === "signup") {
-        // 🔹 SIGNUP FLOW (NO AUTO LOGIN)
+        // 🔹 SIGNUP FLOW (Sending phone to backend)
         await axios.post("http://localhost:5000/api/auth/signup", {
           name,
           email,
+          phone, // ADDED: Phone number in signup payload
           password,
         });
 
@@ -42,8 +44,8 @@ const Auth = () => {
         { email, password }
       );
 
-      login(res.data); // save token + user
-      navigate("/dashboard"); // profile page
+      login(res.data); // Save token + user (including phone)
+      navigate("/dashboard");
     } catch (err: any) {
       setMessage(err.response?.data?.message || "Something went wrong");
     } finally {
@@ -61,7 +63,6 @@ const Auth = () => {
           {mode === "login" ? "Login" : "Create Account"}
         </h1>
 
-        {/* Success / Error Message */}
         {message && (
           <p className="mb-3 text-sm text-center text-primary">
             {message}
@@ -69,13 +70,26 @@ const Auth = () => {
         )}
 
         {mode === "signup" && (
-          <input
-            required
-            placeholder="Full Name"
-            className="w-full p-2 mb-2 border rounded"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
+          <>
+            <input
+              required
+              placeholder="Full Name"
+              className="w-full p-2 mb-2 border rounded"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+            />
+            {/* ADDED: Phone input field for Signup */}
+            <input
+              required
+              type="tel"
+              placeholder="Phone (10 digits)"
+              pattern="[0-9]{10}"
+              title="Please enter a 10-digit phone number"
+              className="w-full p-2 mb-2 border rounded"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+            />
+          </>
         )}
 
         <input
@@ -111,6 +125,7 @@ const Auth = () => {
           onClick={() => {
             setMode(mode === "login" ? "signup" : "login");
             setMessage("");
+            setPhone(""); // Clear phone when switching
           }}
         >
           {mode === "login"

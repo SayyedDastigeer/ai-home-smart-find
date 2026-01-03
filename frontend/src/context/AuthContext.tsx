@@ -4,6 +4,7 @@ interface User {
   id: string;
   name: string;
   email: string;
+  phone: string; // ADDED: TypeScript type
 }
 
 interface AuthContextType {
@@ -20,10 +21,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 
   const login = ({ token, user }: { token: string; user: User }) => {
-    localStorage.setItem("token", token);
-    localStorage.setItem("user", JSON.stringify(user));
-    setUser(user);
-  };
+  localStorage.setItem("token", token);
+  // This will now include the phone number in the stringified object
+  localStorage.setItem("user", JSON.stringify(user)); 
+  setUser(user);
+};
 
   const logout = () => {
     localStorage.removeItem("token");

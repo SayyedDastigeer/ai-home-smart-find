@@ -2,63 +2,55 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
-// SIGNUP
 exports.signup = async (req, res) => {
-  const { name, email, password } = req.body;
+  console.log("Incoming Data:", req.body);
+
+  const { name, email, password, phone } = req.body;
+
+  if (!name || !email || !password || !phone) {
+    return res.status(400).json({ message: "All fields are required" });
+  }
 
   try {
-    const exists = await User.findOne({ email });
-    if (exists) {
-      return res.status(400).json({ message: "User already exists" });
+    const existingUser = await User.findOne({
+      $or: [{ email }, { phone }],
+    });
+
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ message: "Email or phone already exists" });
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+    const hashedPassword = await bcrypt.hash(password, 12);
 
     const user = await User.create({
       name,
       email,
       password: hashedPassword,
+      phone,
     });
 
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    console.log("User Created in DB:", user);
 
-    res.status(201).json({
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
-    });
+    res.status(201).json({ message: "Signup successful" });
   } catch (err) {
-    res.status(500).json({ message: "Signup failed" });
+    console.error("DB Error:", err);
+    res.status(500).json({ message: err.message });
   }
 };
+
 
 // LOGIN
 exports.login = async (req, res) => {
   const { email, password } = req.body;
-
   try {
     const user = await User.findOne({ email });
-    if (!user) {
+    if (!user || !(await bcrypt.compare(password, user.password))) {
       return res.status(400).json({ message: "Invalid credentials" });
     }
 
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) {
-      return res.status(400).json({ message: "Invalid credentials" });
-    }
-
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 
     res.json({
       token,
@@ -66,6 +58,7 @@ exports.login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
+        phone: user.phone, // 4. Include phone in response
       },
     });
   } catch (err) {

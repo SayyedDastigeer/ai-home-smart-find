@@ -5,7 +5,14 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    // Essential arrays for tracking user-property relationships
+    // ADDED: Phone number field with basic 10-digit validation
+    phone: { 
+      type: String, 
+      required: true, 
+      unique: true,
+      trim: true,
+      match: [/^\d{10}$/, 'Please provide a valid 10-digit phone number'] 
+    },
     listedProperties: [{ type: mongoose.Schema.Types.ObjectId, ref: "Property" }],
     boughtProperties: [{ type: mongoose.Schema.Types.ObjectId, ref: "Property" }],
     rentedProperties: [{ type: mongoose.Schema.Types.ObjectId, ref: "Property" }],
