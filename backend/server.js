@@ -15,6 +15,7 @@ connectDB();
 app.use("/api/auth", require("./routes/authRoutes"));
 app.use("/api/dashboard", require("./routes/dashboardRoutes"));
 app.use("/api/properties", require("./routes/propertyRoutes"));
+app.use("/api/inquiries", require("./routes/inquiryRoutes")); // ADDED THIS
 
 app.get("/", (req, res) => {
   res.send("Backend running");

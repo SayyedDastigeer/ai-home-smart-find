@@ -11,16 +11,17 @@ import SearchResults from "./pages/SearchResults";
 import PropertyDetails from "./pages/PropertyDetails";
 import SavedProperties from "./pages/SavedProperties";
 import ListProperty from "./pages/ListProperty";
+import Inbox from "./pages/Inbox"; // ADDED THIS
 import NotFound from "./pages/NotFound";
 import { RecommendationsPage } from "./pages/RecommendationsPage";
 
 import { useAuth } from "@/context/AuthContext";
+import EditProperty from "./pages/EditProperty";
 
 const queryClient = new QueryClient();
 
 const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   const { user } = useAuth();
-  // Redirect to Auth if no user is found in context
   return user ? children : <Navigate to="/auth" replace />;
 };
 
@@ -29,9 +30,6 @@ const App = () => (
     <TooltipProvider>
       <Toaster />
       <Sonner />
-      {/* Updated BrowserRouter with Future Flags to suppress 
-        React Router v7 console warnings 
-      */}
       <BrowserRouter 
         future={{ 
           v7_startTransition: true, 
@@ -46,33 +44,34 @@ const App = () => (
           <Route path="/recommendations" element={<RecommendationsPage />} />
           <Route path="/property/:id" element={<PropertyDetails />} />
 
-          {/* Protected Routes - Only accessible when logged in */}
+          {/* Protected Routes */}
           <Route
             path="/dashboard"
-            element={
-              <ProtectedRoute>
-                <Dashboard />
-              </ProtectedRoute>
-            }
+            element={<ProtectedRoute><Dashboard /></ProtectedRoute>}
+          />
+          <Route
+            path="/inbox"
+            element={<ProtectedRoute><Inbox /></ProtectedRoute>} 
           />
           <Route
             path="/saved"
-            element={
-              <ProtectedRoute>
-                <SavedProperties />
-              </ProtectedRoute>
-            }
+            element={<ProtectedRoute><SavedProperties /></ProtectedRoute>}
           />
           <Route
             path="/list-property"
-            element={
-              <ProtectedRoute>
-                <ListProperty />
-              </ProtectedRoute>
+            element={<ProtectedRoute><ListProperty /></ProtectedRoute>}
+          />
+          <Route
+           path="/edit-property/:id"
+           element={
+            <ProtectedRoute>
+              <EditProperty />
+            </ProtectedRoute>
             }
           />
+      
+           
 
-          {/* 404 Catch-all */}
           <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>

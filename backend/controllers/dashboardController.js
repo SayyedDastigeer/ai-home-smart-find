@@ -1,5 +1,6 @@
 const Property = require("../models/Property");
 const User = require("../models/User");
+const Inquiry = require("../models/Inquiry"); // Import Inquiry model
 
 exports.getDashboard = async (req, res) => {
   try {
@@ -8,29 +9,21 @@ exports.getDashboard = async (req, res) => {
 
     if (!user) return res.status(404).json({ message: "User not found" });
 
-    // Precise counts based on specific status and roles
-    const [listedCount, boughtCount, rentedCount, givenOnRentCount] = await Promise.all([
-      // Total properties listed by the user (regardless of status)
-      Property.countDocuments({ owner: userId }),
-      // Properties successfully purchased by the user
-      Property.countDocuments({ buyer: userId, status: "sold" }),
-      // Properties currently rented by the user
-      Property.countDocuments({ renter: userId, status: "rented" }),
-      // Properties owned by user that are currently occupied by a tenant (Income source)
-      Property.countDocuments({ owner: userId, status: "rented" }),
+    const [activeListingsCount, totalInquiriesCount, myListings] = await Promise.all([
+      Property.countDocuments({ owner: userId, status: "available" }),
+      Inquiry.countDocuments({ owner: userId }), // Total leads
+      Property.find({ owner: userId }).sort({ createdAt: -1 }), // For listing management
     ]);
 
     res.json({
       name: user.name,
       email: user.email,
-      listedCount,
-      boughtCount,
-      rentedCount,
-      givenOnRentCount,
+      activeListingsCount,
+      totalInquiriesCount,
+      myListings,
       savedCount: user.savedProperties ? user.savedProperties.length : 0,
     });
   } catch (err) {
-    console.error("Dashboard Stats Error:", err);
     res.status(500).json({ message: "Failed to load dashboard statistics" });
   }
 };

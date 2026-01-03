@@ -52,18 +52,36 @@ export function AIChatWidget() {
   };
 
   const getAIResponse = (query: string): string => {
-    const lowerQuery = query.toLowerCase();
-    if (lowerQuery.includes("overpriced")) {
-      return "Based on our AI analysis, properties in this area are typically priced 5-8% above market value. I'd recommend negotiating or looking at nearby neighborhoods for better deals.";
-    }
-    if (lowerQuery.includes("rent") && lowerQuery.includes("buy")) {
-      return "Given current market conditions with high interest rates, renting might be more economical in the short term. However, if you plan to stay 5+ years, buying could build equity and hedge against rent increases.";
-    }
-    if (lowerQuery.includes("yield")) {
-      return "The average rental yield in this area is around 4.2%. Properties near transit hubs typically see 0.5-1% higher yields due to strong tenant demand.";
-    }
-    return "That's a great question! I can help you analyze property prices, compare neighborhoods, and find the best investment opportunities. Could you share more details about what you're looking for?";
-  };
+  const lowerQuery = query.toLowerCase();
+
+  // 1. Context: Overpriced / Valuation
+  if (lowerQuery.includes("overpriced") || lowerQuery.includes("value") || lowerQuery.includes("worth")) {
+    return "Our AI analysis shows this property is priced competitively for its location. While the area has seen a 5-8% increase recently, the specific amenities here justify the current asking price. Would you like to contact the seller to negotiate?";
+  }
+
+  // 2. Context: Buy vs Rent
+  if (lowerQuery.includes("rent") && lowerQuery.includes("buy")) {
+    return "Given the current local market trends, if you plan to stay in this area for more than 5 years, buying is statistically better for equity growth. However, if you're looking for flexibility, renting is currently 12% cheaper per month in this specific zip code.";
+  }
+
+  // 3. Context: Investment / Rental Yield
+  if (lowerQuery.includes("yield") || lowerQuery.includes("investment") || lowerQuery.includes("roi")) {
+    return "The average rental yield in this neighborhood is approximately 4.2%. However, properties with the 'Verified' badge often see lower vacancy rates and slightly higher returns due to tenant trust.";
+  }
+
+  // 4. Context: Location/Area Intelligence
+  if (lowerQuery.includes("area") || lowerQuery.includes("neighborhood") || lowerQuery.includes("location")) {
+    return "This area is in high demand! Properties here usually receive serious inquiries within the first 48 hours of listing. It's a great time to reach out to the owner via the 'Contact Seller' button before it's gone.";
+  }
+
+  // 5. Context: Contacting the owner
+  if (lowerQuery.includes("contact") || lowerQuery.includes("talk") || lowerQuery.includes("message")) {
+    return "You can reach the seller directly by clicking the 'Contact Seller' button on the sidebar. This will send your inquiry and contact details to their dashboard inbox instantly.";
+  }
+
+  // Default Fallback
+  return "That's an interesting question! I can provide deep insights on pricing accuracy, location trends, and investment yields for this property. Would you like to know more about the market value or the neighborhood?";
+};
 
   const handleSuggestedQuestion = (question: string) => {
     setInput(question);
