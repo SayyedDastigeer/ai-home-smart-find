@@ -8,9 +8,16 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import {
   MapPin, Bed, Bath, Square, ChevronLeft, ChevronRight,
   Heart, Phone, MessageCircle, Sparkles, Loader2,
-  Settings, Edit3, Trash2, Info, Share2, Check
+  Settings, Edit3, Trash2, Info, Share2, Check, MessageSquare
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -22,6 +29,7 @@ const PropertyDetails = () => {
   const [processing, setProcessing] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
   const [currentImage, setCurrentImage] = useState(0);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [customMessage, setCustomMessage] = useState("I am interested in this property. Please contact me.");
 
   const token = localStorage.getItem("token");
@@ -30,11 +38,9 @@ const PropertyDetails = () => {
 
   const fetchPropertyData = async () => {
     try {
-      // 1. Fetch main property details
       const res = await axios.get(`http://localhost:5000/api/properties/${id}`);
       setProperty(res.data);
 
-      // 2. Check wishlist status if logged in
       if (token) {
         const savedRes = await axios.get("http://localhost:5000/api/properties/saved-properties", {
           headers: { Authorization: `Bearer ${token}` },
@@ -79,18 +85,18 @@ const PropertyDetails = () => {
     }
     try {
       setProcessing(true);
-      // Calls the new inquiry system
       await axios.post(`http://localhost:5000/api/inquiries`, {
         propertyId: id,
-        ownerId: property.owner,
+        ownerId: property.owner._id || property.owner,
         message: customMessage,
         buyerPhone: user.phone || "Not provided",
         buyerEmail: user.email
       }, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      toast.success("Message sent! You can continue the chat in your Inbox.");
+      toast.success("Message sent! You can continue in your Inbox.");
       setCustomMessage("");
+      setIsDialogOpen(false); // Close modal on success
     } catch (err) {
       toast.error("Failed to send inquiry");
     } finally {
@@ -117,7 +123,7 @@ const PropertyDetails = () => {
   if (loading) return <div className="min-h-screen flex items-center justify-center"><Loader2 className="h-10 w-10 animate-spin text-primary" /></div>;
   if (!property) return <div className="text-center py-20">Property not found</div>;
 
-  const isOwner = property.owner === currentUserId;
+  const isOwner = (property.owner._id || property.owner) === currentUserId;
   const images = property.images?.length > 0 ? property.images : ["https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?w=1200&q=80"];
 
   return (
@@ -144,6 +150,7 @@ const PropertyDetails = () => {
         <div className="container mt-8">
           <div className="grid lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2 space-y-8">
+              {/* Image Carousel */}
               <div className="relative aspect-[16/9] rounded-3xl overflow-hidden shadow-2xl group bg-black">
                 <img src={images[currentImage]} alt={property.title} className="w-full h-full object-cover" />
                 {images.length > 1 && (
@@ -159,6 +166,7 @@ const PropertyDetails = () => {
                 </div>
               </div>
 
+              {/* Info Section */}
               <div className="bg-white dark:bg-card p-8 rounded-3xl shadow-sm border border-border/40">
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                   <div className="space-y-2">
@@ -191,6 +199,7 @@ const PropertyDetails = () => {
             </div>
 
             <div className="space-y-6">
+              {/* Management / Action Card */}
               <Card className={`rounded-3xl shadow-xl overflow-hidden sticky top-24 ${isOwner ? 'border-primary/40 ring-1 ring-primary/10' : 'border-none'}`}>
                 <CardContent className="p-6 space-y-4">
                   <div className="flex justify-between items-center mb-2">
@@ -208,20 +217,55 @@ const PropertyDetails = () => {
                     </div>
                   ) : (
                     <div className="space-y-3 pt-2">
-                      <h3 className="text-lg font-bold">Interested in this property?</h3>
-                      <textarea 
-                        className="w-full p-3 text-sm border rounded-xl bg-slate-50 outline-none focus:ring-1 focus:ring-primary min-h-[100px] resize-none"
-                        value={customMessage}
-                        onChange={(e) => setCustomMessage(e.target.value)}
-                        placeholder="Write a message to the seller..."
-                      />
-                      <Button className="w-full h-14 text-lg font-bold shadow-lg shadow-primary/20" onClick={handleInquiry} disabled={processing || property.status !== 'available'}>
-                        {processing ? <Loader2 className="animate-spin" /> : <MessageCircle className="h-5 w-5 mr-2" />}
-                        {property.status === 'available' ? 'Contact Seller' : 'Listing Closed'}
-                      </Button>
+                      {/* POPUP CONTACT DIALOG */}
+                      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                        <DialogTrigger asChild>
+                          <Button className="w-full h-14 text-lg font-bold shadow-lg shadow-primary/20 rounded-2xl" disabled={property.status !== 'available'}>
+                            <MessageCircle className="h-5 w-5 mr-2" />
+                            {property.status === 'available' ? 'Contact Seller' : 'Listing Closed'}
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[450px] rounded-3xl p-0 overflow-hidden border-none shadow-2xl bg-white">
+                          <div className="bg-primary p-6 text-white">
+                            <DialogHeader>
+                              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
+                                <MessageSquare className="h-6 w-6" /> Contact Owner
+                              </DialogTitle>
+                            </DialogHeader>
+                          </div>
+                          <div className="p-6 space-y-4">
+                            <div className="flex items-center gap-4 p-4 bg-slate-50 rounded-2xl">
+                              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
+                                {property.owner?.name?.[0] || "O"}
+                              </div>
+                              <div>
+                                <p className="font-bold text-foreground">{property.owner?.name || "Property Owner"}</p>
+                                <p className="text-sm text-muted-foreground">Typically responds in ~2 hours</p>
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground ml-1">Message</label>
+                              <textarea 
+                                className="w-full p-4 text-sm border-2 border-slate-100 rounded-2xl bg-slate-50 outline-none focus:border-primary min-h-[120px] resize-none"
+                                value={customMessage}
+                                onChange={(e) => setCustomMessage(e.target.value)}
+                              />
+                            </div>
+                            <Button className="w-full h-14 text-lg font-bold rounded-2xl" onClick={handleInquiry} disabled={processing}>
+                              {processing ? <Loader2 className="animate-spin" /> : "Send Message"}
+                            </Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+
                       <div className="grid grid-cols-2 gap-3 pt-2">
-                        <Button variant="outline" className="h-11"><Phone className="h-4 w-4 mr-2" /> Call Agent</Button>
-                        <Button variant="outline" className="h-11"><Share2 className="h-4 w-4 mr-2" /> Share</Button>
+                        {/* Display owner's stored phone number */}
+                        <a href={`tel:${property.owner?.phone}`} className="w-full">
+                          <Button variant="outline" className="w-full h-12 rounded-xl border-slate-200">
+                            <Phone className="h-4 w-4 mr-2" /> Call Agent
+                          </Button>
+                        </a>
+                        <Button variant="outline" className="h-12 rounded-xl border-slate-200"><Share2 className="h-4 w-4 mr-2" /> Share</Button>
                       </div>
                     </div>
                   )}
@@ -233,7 +277,7 @@ const PropertyDetails = () => {
                   <CardContent className="p-6 space-y-4">
                     <div className="flex items-center gap-2 text-primary font-bold"><Sparkles className="h-5 w-5" /> AI Market Intelligence</div>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Based on historical data for <span className="font-bold">{property.location}</span>, listings similar to this often receive inquiries within the first 48 hours.
+                      Market insight for <span className="font-bold">{property.location}</span> shows high demand. Listings here usually close within 7-10 days.
                     </p>
                   </CardContent>
                 </Card>
