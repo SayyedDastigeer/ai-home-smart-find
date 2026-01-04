@@ -13,13 +13,16 @@ import {
   Loader2, 
   MapPin,
   ExternalLink,
-  Settings
+  Settings,
+  UserX // Added icon for account deletion
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth to handle logout
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const { logout } = useAuth(); // Destructure logout from context
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +31,6 @@ const Dashboard = () => {
     if (!token) return navigate("/auth");
 
     try {
-      // Fetches active listing counts and the full property list
       const res = await axios.get("http://localhost:5000/api/dashboard", {
         headers: { Authorization: `Bearer ${token}` },
       });
@@ -41,7 +43,29 @@ const Dashboard = () => {
     }
   };
 
-  // Delete Functionality: Calls backend to remove listing instantly
+  // 🔹 NEW: Function to delete the entire user account and related data
+  const handleDeleteAccount = async () => {
+    const isConfirmed = window.confirm(
+      "CRITICAL WARNING: This will permanently delete your account, all your listed properties, and all messages. This action is IRREVERSIBLE. Proceed?"
+    );
+
+    if (!isConfirmed) return;
+
+    try {
+      const token = localStorage.getItem("token");
+      await axios.delete("http://localhost:5000/api/auth/delete-account", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      toast.success("Account and all associated data deleted successfully.");
+      logout(); // Clear local state and storage
+      navigate("/"); // Redirect to home page
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.message || "Failed to delete account");
+    }
+  };
+
   const handleDelete = async (id: string) => {
     if (!window.confirm("Are you sure you want to permanently remove this listing?")) return;
     
@@ -51,7 +75,7 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success("Listing removed successfully");
-      fetchDashboardData(); // Refresh counts and listing grid
+      fetchDashboardData();
     } catch (err) {
       toast.error("Could not delete the listing. Please try again.");
     }
@@ -74,9 +98,19 @@ const Dashboard = () => {
       <main className="flex-1 container py-10">
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-3xl font-bold tracking-tight">Management Dashboard</h1>
-          <Button onClick={() => navigate("/list-property")} className="rounded-xl shadow-lg">
-            <PlusCircle className="mr-2 h-5 w-5" /> Add New Listing
-          </Button>
+          <div className="flex gap-3">
+            {/* 🔹 NEW: Account Deletion Button (Danger Zone) */}
+            <Button 
+              variant="outline" 
+              onClick={handleDeleteAccount} 
+              className="rounded-xl border-red-200 text-red-600 hover:bg-red-50"
+            >
+              <UserX className="mr-2 h-5 w-5" /> Delete Account
+            </Button>
+            <Button onClick={() => navigate("/list-property")} className="rounded-xl shadow-lg">
+              <PlusCircle className="mr-2 h-5 w-5" /> Add New Listing
+            </Button>
+          </div>
         </div>
 
         {/* Statistics Bar */}
@@ -106,7 +140,7 @@ const Dashboard = () => {
           </Card>
         </div>
 
-        {/* Listing Management: Displays a clean list of the owner's properties */}
+        {/* Listing Management */}
         <div className="space-y-6">
           <div className="flex items-center gap-2 text-xl font-bold">
             <Settings className="h-5 w-5 text-primary" />
@@ -146,7 +180,7 @@ const Dashboard = () => {
                       <Button 
                         variant="ghost" 
                         className="text-destructive hover:bg-destructive/10 rounded-xl" 
-                        onClick={() => handleDelete(property._id)} //
+                        onClick={() => handleDelete(property._id)}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>

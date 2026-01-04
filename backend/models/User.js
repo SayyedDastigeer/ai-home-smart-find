@@ -5,7 +5,6 @@ const userSchema = new mongoose.Schema(
     name: { type: String, required: true },
     email: { type: String, required: true, unique: true },
     password: { type: String, required: true },
-    // ADDED: Phone number field with basic 10-digit validation
     phone: { 
       type: String, 
       required: true, 
@@ -21,5 +20,20 @@ const userSchema = new mongoose.Schema(
   },
   { timestamps: true }
 );
+
+// CASCADE DELETE: Triggers when User.findOneAndDelete is called
+userSchema.pre('findOneAndDelete', async function(next) {
+  const userId = this.getQuery()._id;
+  try {
+    // Delete properties and inquiries linked to this user
+    await mongoose.model("Property").deleteMany({ owner: userId });
+    await mongoose.model("Inquiry").deleteMany({ 
+      $or: [{ sender: userId }, { receiver: userId }] 
+    });
+    next();
+  } catch (err) {
+    next(err);
+  }
+});
 
 module.exports = mongoose.model("User", userSchema);
