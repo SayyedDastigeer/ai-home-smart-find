@@ -143,7 +143,7 @@ const Dashboard = () => {
                 value: data.activeListingsCount,
               },
               {
-                label: "Inquiries",
+                label: "Inbox",
                 value: data.totalInquiriesCount,
                 click: () => navigate("/inbox"),
               },

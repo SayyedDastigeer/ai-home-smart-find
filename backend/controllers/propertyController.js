@@ -1,57 +1,78 @@
 const Property = require("../models/Property");
 const User = require("../models/User");
 
-// 1. Fetch properties with Search & Dashboard filtering
 exports.getProperties = async (req, res) => {
   try {
-    const { location, type, minPrice, maxPrice, bedrooms, role, userId } = req.query;
+    const { 
+      location, type, minPrice, maxPrice, bedrooms, 
+      bathrooms, minArea, role, userId 
+    } = req.query;
+    
+    // Start with a totally empty object
     let query = {};
 
-    // Dashboard-specific filtering logic
+    // 1. Dashboard Logic
     if (role && userId) {
-      if (role === "owner") {
-        query.owner = userId; // Show all properties listed by this user
-      } else if (role === "buyer") {
-        query.buyer = userId; // Show properties user has bought
-        query.status = "sold";
-      } else if (role === "renter") {
-        query.renter = userId; // Show properties user is renting
-        query.status = "rented";
-      }
+      if (role === "owner") query.owner = userId;
+      else if (role === "buyer") { query.buyer = userId; query.status = "sold"; }
+      else if (role === "renter") { query.renter = userId; query.status = "rented"; }
     } else {
-      // General Search: Only show active listings
-      query.status = "available";
+      query.status = "available"; 
     }
 
-    // Flexible Location Search (Case-insensitive Regex)
+    // 2. String Filters (Only add if they have text)
     if (location && location.trim() !== "") {
       query.location = { $regex: location, $options: "i" };
     }
-
-    // Property Type Filter (Mapping 'buy' intent to 'sell' type)
-    if (type && type !== "all" && type !== "") {
+    
+    if (type && type !== "" && type !== "all" && type !== "Any") {
       query.type = type;
     }
 
-    // Numerical Filters
-    if (minPrice || maxPrice) {
+    // 3. Price Logic (Strict check to prevent NaN)
+    const minP = parseInt(minPrice);
+    const maxP = parseInt(maxPrice);
+    if (!isNaN(minP) || !isNaN(maxP)) {
       query.price = {};
-      if (minPrice) query.price.$gte = Number(minPrice);
-      if (maxPrice) query.price.$lte = Number(maxPrice);
+      if (!isNaN(minP)) query.price.$gte = minP;
+      if (!isNaN(maxP)) query.price.$lte = maxP;
     }
-    if (bedrooms) query.bedrooms = { $gte: Number(bedrooms) };
+
+    // 4. Bedrooms (Strict check)
+    if (bedrooms && bedrooms !== "Any" && bedrooms !== "") {
+      const bedVal = parseInt(bedrooms.toString().replace(/[^0-9]/g, ''));
+      if (!isNaN(bedVal)) {
+        query.bedrooms = { $gte: bedVal };
+      }
+    }
+
+    // 5. Bathrooms (Strict check)
+    if (bathrooms && bathrooms !== "Any" && bathrooms !== "") {
+      const bathVal = parseFloat(bathrooms.toString().replace(/[^0-9.]/g, ''));
+      if (!isNaN(bathVal)) {
+        query.bathrooms = { $gte: bathVal };
+      }
+    }
+
+    // 6. Area (Strict check)
+    const areaVal = parseInt(minArea);
+    if (minArea && !isNaN(areaVal)) {
+      query.area = { $gte: areaVal };
+    }
+
+    console.log("EXECUTION QUERY:", query); // Check your server terminal to see this!
 
     const properties = await Property.find(query).sort({ createdAt: -1 });
     res.json(properties);
   } catch (error) {
-    res.status(500).json({ message: "Error fetching properties", error });
+    console.error("CRITICAL ERROR:", error);
+    res.status(500).json({ message: "Search Error", error: error.message });
   }
 };
-
 // 2. Get Single Property Details
 exports.getPropertyById = async (req, res) => {
   try {
-    const property = await Property.findById(req.params.id);
+    const property = await Property.findById(req.params.id).populate("owner", "name email phone");
     if (!property) return res.status(404).json({ message: "Property not found" });
     res.json(property);
   } catch (error) {
@@ -67,13 +88,11 @@ exports.toggleSaveProperty = async (req, res) => {
     const index = user.savedProperties.findIndex((id) => id.toString() === propertyId);
 
     if (index > -1) {
-      // Unsave: Remove from array
       user.savedProperties.splice(index, 1);
       await user.save();
       return res.json({ saved: false, message: "Removed from saved" });
     }
     
-    // Save: Add to array
     user.savedProperties.push(propertyId);
     await user.save();
     res.json({ saved: true, message: "Added to saved" });
@@ -86,7 +105,6 @@ exports.toggleSaveProperty = async (req, res) => {
 exports.getSavedProperties = async (req, res) => {
   try {
     const user = await User.findById(req.userId).populate("savedProperties");
-    if (!user) return res.status(404).json({ message: "User not found" });
     res.status(200).json(user.savedProperties);
   } catch (err) {
     res.status(500).json({ message: "Error fetching saved items" });
@@ -96,31 +114,22 @@ exports.getSavedProperties = async (req, res) => {
 // 5. Clear All Saved Properties
 exports.clearSavedProperties = async (req, res) => {
   try {
-    const user = await User.findByIdAndUpdate(
-      req.userId,
-      { $set: { savedProperties: [] } },
-      { new: true }
-    );
-    if (!user) return res.status(404).json({ message: "User not found" });
+    await User.findByIdAndUpdate(req.userId, { $set: { savedProperties: [] } });
     res.status(200).json({ message: "Wishlist cleared successfully" });
   } catch (error) {
     res.status(500).json({ message: "Clear failed" });
   }
 };
 
-// 6. Delete/Deactivate Listing (Owner Only)
+// 6. Delete Listing
 exports.deleteProperty = async (req, res) => {
   try {
     const property = await Property.findById(req.params.id);
-    if (!property) return res.status(404).json({ message: "Listing not found" });
-
-    // Authorization Check
-    if (property.owner.toString() !== req.userId) {
-      return res.status(403).json({ message: "Unauthorized to delete this listing" });
+    if (!property || property.owner.toString() !== req.userId) {
+      return res.status(403).json({ message: "Unauthorized" });
     }
-
     await Property.findByIdAndDelete(req.params.id);
-    res.json({ message: "Listing successfully removed" });
+    res.json({ message: "Listing removed" });
   } catch (error) {
     res.status(500).json({ message: "Delete operation failed" });
   }
@@ -136,7 +145,7 @@ exports.listProperty = async (req, res) => {
       ...req.body,
       price: Number(req.body.price),
       bedrooms: Number(req.body.bedrooms),
-      bathrooms: Number(req.body.bathrooms),
+      bathrooms: Number(req.body.bathrooms || 1),
       area: Number(req.body.area),
       amenities,
       images: imageUrls,
@@ -146,37 +155,32 @@ exports.listProperty = async (req, res) => {
     await User.findByIdAndUpdate(req.userId, { $push: { listedProperties: property._id } });
     res.status(201).json(property);
   } catch (error) {
-    res.status(400).json({ message: "Failed to list property", error: error.message });
+    res.status(400).json({ message: "Listing failed", error: error.message });
   }
 };
-// 9. Update existing property
+
+// 8. Update Property
 exports.updateProperty = async (req, res) => {
   try {
     const { id } = req.params;
     let property = await Property.findById(id);
 
-    if (!property) return res.status(404).json({ message: "Property not found" });
-
-    // Verify ownership
-    if (property.owner.toString() !== req.userId) {
-      return res.status(403).json({ message: "Unauthorized: You do not own this listing" });
+    if (!property || property.owner.toString() !== req.userId) {
+      return res.status(403).json({ message: "Unauthorized" });
     }
 
-    // Update fields (excluding images for simplicity in this version)
     const updatedData = {
       ...req.body,
       price: Number(req.body.price),
       bedrooms: Number(req.body.bedrooms),
       bathrooms: Number(req.body.bathrooms),
       area: Number(req.body.area),
-      // Parse amenities if they are sent as a string
       amenities: typeof req.body.amenities === 'string' ? JSON.parse(req.body.amenities) : req.body.amenities
     };
 
     property = await Property.findByIdAndUpdate(id, updatedData, { new: true });
     res.json({ message: "Property updated successfully!", property });
   } catch (error) {
-    console.error("Update Error:", error);
     res.status(500).json({ message: "Failed to update property" });
   }
 };
