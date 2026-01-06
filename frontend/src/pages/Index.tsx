@@ -1,7 +1,8 @@
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import PageTransition from "@/components/layout/PageTransition";
 import { HeroSection } from "@/components/home/HeroSection";
-import { FeaturedProperties } from "@/components/home/FeaturedProperties"; 
+import { FeaturedProperties } from "@/components/home/FeaturedProperties";
 import { FeaturesSection } from "@/components/home/FeaturesSection";
 import { TestimonialsSection } from "@/components/home/TestimonialsSection";
 import { CTASection } from "@/components/home/CTASection";
@@ -11,14 +12,18 @@ const Index = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
-      <main className="flex-1">
-        <HeroSection />
-        {/* Added Featured Properties section directly below Hero */}
-        <FeaturedProperties /> 
-        <FeaturesSection />
-        <TestimonialsSection />
-        <CTASection />
-      </main>
+
+      {/* GLOBAL PAGE ANIMATION */}
+      <PageTransition>
+        <main className="flex-1">
+          <HeroSection />
+          <FeaturedProperties />
+          <FeaturesSection />
+          <TestimonialsSection />
+          <CTASection />
+        </main>
+      </PageTransition>
+
       <Footer />
       <AIChatWidget />
     </div>

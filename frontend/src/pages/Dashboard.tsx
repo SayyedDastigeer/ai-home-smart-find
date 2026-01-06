@@ -1,28 +1,34 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Navbar } from "@/components/layout/Navbar";
-import { Footer } from "@/components/layout/Footer";
-import { Card, CardContent } from "@/components/ui/card";
+import PageTransition from "@/components/layout/PageTransition";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { 
-  MessageSquare, 
-  Building2, 
-  PlusCircle, 
-  Trash2, 
-  Loader2, 
-  MapPin,
-  ExternalLink,
-  Settings,
-  UserX // Added icon for account deletion
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  Plus,
+  Trash2,
+  ArrowUpRight,
+  Settings2,
+  UserX,
+  Bookmark,
+  Loader2,
 } from "lucide-react";
 import { useNavigate, Link } from "react-router-dom";
 import { toast } from "sonner";
-import { useAuth } from "@/context/AuthContext"; // Import useAuth to handle logout
+import { useAuth } from "@/context/AuthContext";
 
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { logout } = useAuth(); // Destructure logout from context
+  const { logout } = useAuth();
+
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const currentUserId = user.id || user._id;
+
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
 
@@ -35,49 +41,37 @@ const Dashboard = () => {
         headers: { Authorization: `Bearer ${token}` },
       });
       setData(res.data);
-    } catch (err) {
-      console.error(err);
-      toast.error("Failed to sync dashboard data");
+    } catch {
+      toast.error("Authentication required");
     } finally {
       setLoading(false);
     }
   };
 
-  // 🔹 NEW: Function to delete the entire user account and related data
   const handleDeleteAccount = async () => {
-    const isConfirmed = window.confirm(
-      "CRITICAL WARNING: This will permanently delete your account, all your listed properties, and all messages. This action is IRREVERSIBLE. Proceed?"
-    );
-
-    if (!isConfirmed) return;
-
+    if (!confirm("Delete account permanently?")) return;
     try {
       const token = localStorage.getItem("token");
       await axios.delete("http://localhost:5000/api/auth/delete-account", {
         headers: { Authorization: `Bearer ${token}` },
       });
-
-      toast.success("Account and all associated data deleted successfully.");
-      logout(); // Clear local state and storage
-      navigate("/"); // Redirect to home page
-    } catch (err: any) {
-      console.error(err);
-      toast.error(err.response?.data?.message || "Failed to delete account");
+      logout();
+      navigate("/");
+    } catch {
+      toast.error("Failed");
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to permanently remove this listing?")) return;
-    
+  const handleDeleteProperty = async (id: string) => {
+    if (!confirm("Delete listing?")) return;
     try {
       const token = localStorage.getItem("token");
       await axios.delete(`http://localhost:5000/api/properties/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      toast.success("Listing removed successfully");
       fetchDashboardData();
-    } catch (err) {
-      toast.error("Could not delete the listing. Please try again.");
+    } catch {
+      toast.error("Failed");
     }
   };
 
@@ -85,120 +79,170 @@ const Dashboard = () => {
     fetchDashboardData();
   }, []);
 
-  if (loading) return (
-    <div className="min-h-screen flex items-center justify-center">
-      <Loader2 className="animate-spin h-10 w-10 text-primary" />
-    </div>
-  );
+  if (loading) {
+    return (
+      <div className="h-screen flex items-center justify-center">
+        <Loader2 className="h-6 w-6 animate-spin text-slate-400" />
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen flex flex-col bg-[#F4F7FE]">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
       <Navbar />
-      
-      <main className="flex-1 container py-10">
-        <div className="flex justify-between items-center mb-10">
-          <h1 className="text-3xl font-bold tracking-tight">Management Dashboard</h1>
-          <div className="flex gap-3">
-            {/* 🔹 NEW: Account Deletion Button (Danger Zone) */}
-            <Button 
-              variant="outline" 
-              onClick={handleDeleteAccount} 
-              className="rounded-xl border-red-200 text-red-600 hover:bg-red-50"
-            >
-              <UserX className="mr-2 h-5 w-5" /> Delete Account
-            </Button>
-            <Button onClick={() => navigate("/list-property")} className="rounded-xl shadow-lg">
-              <PlusCircle className="mr-2 h-5 w-5" /> Add New Listing
-            </Button>
-          </div>
-        </div>
 
-        {/* Statistics Bar */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
-          <Card className="rounded-3xl border-none shadow-sm">
-            <CardContent className="p-8 flex items-center gap-6">
-              <div className="h-16 w-16 bg-blue-600 rounded-2xl flex items-center justify-center text-white shadow-lg">
-                <Building2 className="h-8 w-8" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Active Listings</p>
-                <h2 className="text-4xl font-black">{data.activeListingsCount}</h2>
-              </div>
-            </CardContent>
-          </Card>
+      {/* GLOBAL PAGE ANIMATION */}
+      <PageTransition>
+        <main className="max-w-7xl mx-auto px-6 py-10">
+          {/* Header */}
+          <div className="flex justify-between items-center mb-10">
+            <div>
+              <h1 className="text-2xl font-semibold tracking-tight">
+                Dashboard
+              </h1>
+              <p className="text-xs text-slate-400 mt-1">
+                User ID · {currentUserId?.slice(0, 8)}
+              </p>
+            </div>
 
-          <Card className="rounded-3xl border-none shadow-sm cursor-pointer hover:bg-white/50 transition-colors" onClick={() => navigate("/inbox")}>
-            <CardContent className="p-8 flex items-center gap-6">
-              <div className="h-16 w-16 bg-amber-500 rounded-2xl flex items-center justify-center text-white shadow-lg">
-                <MessageSquare className="h-8 w-8" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Property Inquiries</p>
-                <h2 className="text-4xl font-black">{data.totalInquiriesCount}</h2>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            <div className="flex gap-3">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="outline" size="sm">
+                    <Settings2 className="h-4 w-4 mr-2" />
+                    Settings
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem
+                    onClick={handleDeleteAccount}
+                    className="text-red-600 font-medium"
+                  >
+                    <UserX className="h-4 w-4 mr-2" />
+                    Delete Account
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-        {/* Listing Management */}
-        <div className="space-y-6">
-          <div className="flex items-center gap-2 text-xl font-bold">
-            <Settings className="h-5 w-5 text-primary" />
-            My Listed Properties
+              <Button
+                size="sm"
+                className="bg-slate-900 hover:bg-slate-800"
+                onClick={() => navigate("/list-property")}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Listing
+              </Button>
+            </div>
           </div>
 
-          <div className="grid gap-4">
-            {data.myListings && data.myListings.length > 0 ? (
-              data.myListings.map((property: any) => (
-                <Card key={property._id} className="rounded-2xl border-none shadow-sm overflow-hidden hover:shadow-md transition-shadow">
-                  <CardContent className="p-4 flex flex-col md:flex-row items-center gap-6">
-                    <img 
-                      src={property.images?.[0] || "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=300"} 
-                      className="h-24 w-32 rounded-xl object-cover shadow-sm" 
-                      alt="Property" 
-                    />
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <Badge className={property.status === 'available' ? 'bg-green-500' : 'bg-red-500'}>
-                          {property.status}
-                        </Badge>
-                        <h3 className="font-bold text-lg truncate">{property.title}</h3>
-                      </div>
-                      <div className="flex items-center text-sm text-muted-foreground">
-                        <MapPin className="h-3 w-3 mr-1 text-primary" /> {property.location}
-                      </div>
-                      <div className="mt-2 text-primary font-bold">₹{property.price.toLocaleString()}</div>
-                    </div>
+          {/* Stats */}
+          <div className="grid grid-cols-4 gap-6 mb-12">
+            {[
+              {
+                label: "Active Listings",
+                value: data.activeListingsCount,
+              },
+              {
+                label: "Inquiries",
+                value: data.totalInquiriesCount,
+                click: () => navigate("/inbox"),
+              },
+              {
+                label: "Saved",
+                value: data.savedCount ?? "View",
+                click: () => navigate("/saved"),
+              },
+              {
+                label: "Status",
+                value: "Connected",
+                green: true,
+              },
+            ].map((card, i) => (
+              <div
+                key={i}
+                onClick={card.click}
+                className="bg-white rounded-xl border shadow-sm p-6 cursor-pointer hover:-translate-y-1 transition-transform"
+              >
+                <p className="text-xs uppercase tracking-widest text-slate-400">
+                  {card.label}
+                </p>
+                <p
+                  className={`mt-3 text-3xl font-semibold ${
+                    card.green ? "text-green-600 text-sm" : ""
+                  }`}
+                >
+                  {card.value}
+                </p>
+              </div>
+            ))}
+          </div>
 
-                    <div className="flex items-center gap-3 w-full md:w-auto border-t md:border-t-0 pt-4 md:pt-0">
-                      <Link to={`/property/${property._id}`} className="flex-1 md:flex-none">
-                        <Button variant="outline" className="w-full rounded-xl">
-                          <ExternalLink className="h-4 w-4 mr-2" /> View
+          {/* Listings */}
+          <div className="bg-white rounded-xl border shadow-sm overflow-hidden">
+            <table className="w-full">
+              <thead className="bg-slate-50 border-b">
+                <tr>
+                  <th className="px-6 py-4 text-xs uppercase text-slate-400">
+                    Property
+                  </th>
+                  <th className="px-6 py-4 text-xs uppercase text-slate-400">
+                    Location
+                  </th>
+                  <th className="px-6 py-4 text-xs uppercase text-slate-400">
+                    Price
+                  </th>
+                  <th className="px-6 py-4 text-xs uppercase text-slate-400 text-right">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.myListings?.map((property: any) => (
+                  <tr
+                    key={property._id}
+                    className="border-b last:border-none hover:bg-slate-50 transition-colors"
+                  >
+                    <td className="px-6 py-4 font-medium">
+                      {property.title}
+                    </td>
+                    <td className="px-6 py-4 text-slate-500">
+                      {property.location}
+                    </td>
+                    <td className="px-6 py-4 font-semibold">
+                      ₹{property.price.toLocaleString()}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex justify-end gap-2">
+                        <Link to={`/property/${property._id}`}>
+                          <Button variant="ghost" size="icon">
+                            <ArrowUpRight className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-500"
+                          onClick={() =>
+                            handleDeleteProperty(property._id)
+                          }
+                        >
+                          <Trash2 className="h-4 w-4" />
                         </Button>
-                      </Link>
-                      <Button 
-                        variant="ghost" 
-                        className="text-destructive hover:bg-destructive/10 rounded-xl" 
-                        onClick={() => handleDelete(property._id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="text-center py-20 bg-white rounded-3xl border-2 border-dashed">
-                <Building2 className="h-12 w-12 mx-auto mb-4 text-muted-foreground opacity-20" />
-                <p className="text-muted-foreground">You don't have any properties listed for sale or rent.</p>
-                <Button variant="link" onClick={() => navigate("/list-property")} className="mt-2">Start listing now</Button>
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+
+            {data.myListings?.length === 0 && (
+              <div className="py-20 text-center text-slate-400">
+                No listings yet.
               </div>
             )}
           </div>
-        </div>
-      </main>
-      <Footer />
+        </main>
+      </PageTransition>
     </div>
   );
 };
