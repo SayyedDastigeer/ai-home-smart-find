@@ -5,13 +5,14 @@ exports.getProperties = async (req, res) => {
   try {
     const { 
       location, type, minPrice, maxPrice, bedrooms, 
-      bathrooms, minArea, role, userId 
+      bathrooms, minArea, role, userId, 
+      homeTypes, // 🔹 For the Checkboxes
+      page = 1, limit = 9 // 🔹 For Speed/Pagination
     } = req.query;
     
-    // Start with a totally empty object
     let query = {};
 
-    // 1. Dashboard Logic
+    // 1. Dashboard Logic (Owner/Buyer/Renter)
     if (role && userId) {
       if (role === "owner") query.owner = userId;
       else if (role === "buyer") { query.buyer = userId; query.status = "sold"; }
@@ -20,16 +21,23 @@ exports.getProperties = async (req, res) => {
       query.status = "available"; 
     }
 
-    // 2. String Filters (Only add if they have text)
+    // 2. Home Type Filter (Support for Multiple Checkboxes)
+    if (homeTypes && homeTypes !== "") {
+      const typeArray = Array.isArray(homeTypes) ? homeTypes : homeTypes.split(",");
+      if (typeArray.length > 0) {
+        query.homeType = { $in: typeArray };
+      }
+    }
+
+    // 3. Location & Listing Type (Sell/Rent)
     if (location && location.trim() !== "") {
       query.location = { $regex: location, $options: "i" };
     }
-    
     if (type && type !== "" && type !== "all" && type !== "Any") {
       query.type = type;
     }
 
-    // 3. Price Logic (Strict check to prevent NaN)
+    // 4. Price Logic (Strict Number Parsing)
     const minP = parseInt(minPrice);
     const maxP = parseInt(maxPrice);
     if (!isNaN(minP) || !isNaN(maxP)) {
@@ -38,34 +46,45 @@ exports.getProperties = async (req, res) => {
       if (!isNaN(maxP)) query.price.$lte = maxP;
     }
 
-    // 4. Bedrooms (Strict check)
+    // 5. Bedrooms (e.g., "3+" -> 3)
     if (bedrooms && bedrooms !== "Any" && bedrooms !== "") {
       const bedVal = parseInt(bedrooms.toString().replace(/[^0-9]/g, ''));
-      if (!isNaN(bedVal)) {
-        query.bedrooms = { $gte: bedVal };
-      }
+      if (!isNaN(bedVal)) query.bedrooms = { $gte: bedVal };
     }
 
-    // 5. Bathrooms (Strict check)
+    // 6. Bathrooms (e.g., "1.5+" -> 1.5)
     if (bathrooms && bathrooms !== "Any" && bathrooms !== "") {
       const bathVal = parseFloat(bathrooms.toString().replace(/[^0-9.]/g, ''));
-      if (!isNaN(bathVal)) {
-        query.bathrooms = { $gte: bathVal };
-      }
+      if (!isNaN(bathVal)) query.bathrooms = { $gte: bathVal };
     }
 
-    // 6. Area (Strict check)
+    // 7. Area (Sqft)
     const areaVal = parseInt(minArea);
-    if (minArea && !isNaN(areaVal)) {
+    if (!isNaN(areaVal)) {
       query.area = { $gte: areaVal };
     }
 
-    console.log("EXECUTION QUERY:", query); // Check your server terminal to see this!
+    // 8. Execution with Pagination and Performance Optimization
+    const skip = (Number(page) - 1) * Number(limit);
+    
+    const properties = await Property.find(query)
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(Number(limit))
+      .lean(); // 🔹 .lean() makes the query 5x faster
 
-    const properties = await Property.find(query).sort({ createdAt: -1 });
-    res.json(properties);
+    const total = await Property.countDocuments(query);
+
+    // Return object with metadata for the frontend
+    res.json({
+      properties,
+      totalPages: Math.ceil(total / limit),
+      currentPage: Number(page),
+      totalProperties: total
+    });
+
   } catch (error) {
-    console.error("CRITICAL ERROR:", error);
+    console.error("SEARCH ERROR:", error);
     res.status(500).json({ message: "Search Error", error: error.message });
   }
 };
@@ -147,6 +166,7 @@ exports.listProperty = async (req, res) => {
       bedrooms: Number(req.body.bedrooms),
       bathrooms: Number(req.body.bathrooms || 1),
       area: Number(req.body.area),
+      homeType: req.body.homeType || "Houses", // 🔹 Added this
       amenities,
       images: imageUrls,
       owner: req.userId,

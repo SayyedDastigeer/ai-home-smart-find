@@ -1,10 +1,10 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { motion, AnimatePresence } from "framer-motion"; // 🔹 Added AnimatePresence
+import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
-import PageTransition from "@/components/layout/PageTransition"; // 🔹 Added PageTransition
+import PageTransition from "@/components/layout/PageTransition";
 import { AIChatWidget } from "@/components/chat/AIChatWidget"; 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -19,7 +19,8 @@ import {
 import {
   MapPin, Bed, Bath, Square, ChevronLeft, ChevronRight,
   Heart, Phone, MessageCircle, Sparkles, Loader2,
-  Settings, Edit3, Trash2, Info, Share2, Check, MessageSquare
+  Settings, Edit3, Trash2, Info, Share2, Check, MessageSquare,
+  Home, Building, Building2, Warehouse
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,6 +40,21 @@ const PropertyDetails = () => {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user") || "{}");
   const currentUserId = user.id || user._id;
+
+  // 🔹 Helper to get icon based on Home Type
+  const getHomeTypeIcon = (type: string) => {
+    switch (type) {
+      case "Apartments":
+      case "Condos":
+        return <Building2 className="h-5 w-5" />;
+      case "Multi-family":
+        return <Building className="h-5 w-5" />;
+      case "Manufactured":
+        return <Warehouse className="h-5 w-5" />;
+      default:
+        return <Home className="h-5 w-5" />;
+    }
+  };
 
   const fetchPropertyData = async () => {
     try {
@@ -145,7 +161,6 @@ const PropertyDetails = () => {
     <div className="min-h-screen flex flex-col bg-[#F8F9FB] dark:bg-background">
       <Navbar />
 
-      {/* ✅ ADDED: PageTransition wrapping the main content */}
       <PageTransition>
         <motion.main
           initial={{ opacity: 0, y: 20 }}
@@ -154,7 +169,7 @@ const PropertyDetails = () => {
           transition={{ duration: 0.5, ease: "easeOut" }}
           className="flex-1 pb-12"
         >
-          {/* Header row with breadcrumbs and save/share */}
+          {/* Header row */}
           <div className="bg-white dark:bg-card border-b">
             <div className="container py-4 flex items-center justify-between">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -194,12 +209,16 @@ const PropertyDetails = () => {
                 <div className="bg-white dark:bg-card p-8 rounded-3xl shadow-sm border border-border/40">
                   <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                     <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-primary font-bold text-sm uppercase tracking-widest">
+                        {getHomeTypeIcon(property.homeType)}
+                        {property.homeType || "Property"}
+                      </div>
                       <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">{property.title}</h1>
                       <div className="flex items-center gap-2 text-muted-foreground text-lg"><MapPin className="h-5 w-5 text-primary" />{property.location}</div>
                     </div>
                     <div className="text-right">
                       <div className="text-4xl font-black text-primary">₹{property.price.toLocaleString()}</div>
-                      <Badge variant="outline" className="mt-2 uppercase tracking-widest">{property.type}</Badge>
+                      <Badge variant="outline" className="mt-2 uppercase tracking-widest px-3 py-1 bg-slate-50">{property.type}</Badge>
                     </div>
                   </div>
                   <div className="grid grid-cols-3 gap-4 pt-6 border-t border-border/60">
@@ -210,12 +229,19 @@ const PropertyDetails = () => {
                 </div>
 
                 <Card className="rounded-3xl border-none shadow-sm overflow-hidden">
-                  <CardHeader className="bg-white dark:bg-card pb-2"><CardTitle className="text-xl font-bold flex items-center gap-2"><Info className="h-5 w-5 text-primary" /> About this property</CardTitle></CardHeader>
+                  <CardHeader className="bg-white dark:bg-card pb-2">
+                    <CardTitle className="text-xl font-bold flex items-center gap-2">
+                      <Info className="h-5 w-5 text-primary" /> About this {property.homeType?.slice(0, -1) || "property"}
+                    </CardTitle>
+                  </CardHeader>
                   <CardContent className="bg-white dark:bg-card">
                     <p className="text-muted-foreground leading-relaxed text-lg">{property.description || "No description provided."}</p>
                     <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-4 pt-6 border-t">
                       {(property.amenities || []).map((item: string) => (
-                        <div key={item} className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-background/40"><Check className="h-4 w-4 text-green-500" /><span className="text-sm font-medium">{item}</span></div>
+                        <div key={item} className="flex items-center gap-3 p-3 rounded-xl border border-border/50 bg-background/40">
+                          <Check className="h-4 w-4 text-green-500" />
+                          <span className="text-sm font-medium">{item}</span>
+                        </div>
                       ))}
                     </div>
                   </CardContent>
@@ -298,7 +324,7 @@ const PropertyDetails = () => {
                   <CardContent className="p-6 space-y-4">
                     <div className="flex items-center gap-2 text-primary font-bold"><Sparkles className="h-5 w-5" /> AI Market Intelligence</div>
                     <p className="text-sm text-muted-foreground leading-relaxed">
-                      Market insight for <span className="font-bold">{property.location}</span> shows high demand. Listings here usually close within 7-10 days.
+                      Market insight for <span className="font-bold">{property.location}</span> shows high demand for <span className="lowercase">{property.homeType}</span>. Listings here usually close within 7-10 days.
                     </p>
                   </CardContent>
                 </Card>

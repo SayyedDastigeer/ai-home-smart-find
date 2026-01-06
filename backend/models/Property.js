@@ -2,10 +2,29 @@ const mongoose = require("mongoose");
 
 const propertySchema = new mongoose.Schema(
   {
-    title: String,
-    location: String,
-    price: Number,
-    type: { type: String, enum: ["sell", "rent"] },
+    title: { type: String, required: true },
+    location: { type: String, required: true },
+    price: { type: Number, required: true },
+    
+    // 🔹 Added homeType field to match your filter checkboxes
+    homeType: { 
+      type: String, 
+      required: true,
+      enum: ["Houses", "Townhomes", "Multi-family", "Condos", "Apartments", "Manufactured"],
+      default: "Houses"
+    },
+
+    type: { 
+      type: String, 
+      enum: ["sell", "rent"], 
+      required: true 
+    },
+
+    status: {
+      type: String,
+      enum: ["available", "sold", "rented"],
+      default: "available",
+    },
 
     bedrooms: Number,
     bathrooms: Number,
@@ -25,24 +44,11 @@ const propertySchema = new mongoose.Schema(
       ref: "User",
       default: null,
     },
- // ... existing fields
-    type: { type: String, enum: ["sell", "rent"] }, 
-    status: {
-      type: String,
-      enum: ["available", "sold", "rented"],
-      default: "available",
-    },
-// ...
+
     renter: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null,
-    },
-
-    status: {
-      type: String,
-      enum: ["available", "sold", "rented"],
-      default: "available",
     },
   },
   { timestamps: true }

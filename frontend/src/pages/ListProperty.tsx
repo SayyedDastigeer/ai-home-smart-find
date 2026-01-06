@@ -35,6 +35,9 @@ const amenitiesList = [
   "Children's Play Area",
 ];
 
+// 🔹 List of available home types
+const propertyTypes = ["Houses", "Townhomes", "Multi-family", "Condos", "Apartments", "Manufactured"];
+
 export default function ListProperty() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -47,6 +50,7 @@ export default function ListProperty() {
     price: "",
     location: "",
     type: "sell",
+    homeType: "Houses", // 🔹 Added homeType state
     bedrooms: "",
     bathrooms: "",
     area: "",
@@ -104,6 +108,7 @@ export default function ListProperty() {
       data.append("price", formData.price);
       data.append("location", formData.location);
       data.append("type", formData.type);
+      data.append("homeType", formData.homeType); // 🔹 Added homeType to submission
       data.append("bedrooms", formData.bedrooms);
       data.append("bathrooms", formData.bathrooms);
       data.append("area", formData.area);
@@ -140,7 +145,6 @@ export default function ListProperty() {
     <div className="min-h-screen flex flex-col bg-background">
       <Navbar />
 
-      {/* ✅ ONLY ADDITION: PageTransition */}
       <PageTransition>
         <main className="flex-1 container py-10 max-w-5xl">
           <form onSubmit={handleSubmit}>
@@ -203,8 +207,41 @@ export default function ListProperty() {
                           onChange={handleInputChange}
                         />
                       </div>
+                      
+                      {/* 🔹 NEW HOME TYPE SELECT */}
                       <div className="grid gap-2">
-                        <Label htmlFor="type">Listing Type</Label>
+                        <Label htmlFor="homeType">Home Type</Label>
+                        <select
+                          id="homeType"
+                          value={formData.homeType}
+                          onChange={handleInputChange}
+                          className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:ring-2 focus:ring-primary"
+                        >
+                          {propertyTypes.map((type) => (
+                            <option key={type} value={type}>
+                              {type}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid md:grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="location">Location</Label>
+                        <div className="relative">
+                          <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                          <Input
+                            id="location"
+                            required
+                            value={formData.location}
+                            onChange={handleInputChange}
+                            className="pl-9"
+                          />
+                        </div>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="type">Listing Intent</Label>
                         <select
                           id="type"
                           value={formData.type}
@@ -214,20 +251,6 @@ export default function ListProperty() {
                           <option value="sell">For Sale</option>
                           <option value="rent">For Rent</option>
                         </select>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-2">
-                      <Label htmlFor="location">Location</Label>
-                      <div className="relative">
-                        <MapPin className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                        <Input
-                          id="location"
-                          required
-                          value={formData.location}
-                          onChange={handleInputChange}
-                          className="pl-9"
-                        />
                       </div>
                     </div>
                   </CardContent>
@@ -251,6 +274,7 @@ export default function ListProperty() {
                           <img
                             src={src}
                             className="w-full h-full object-cover"
+                            alt="preview"
                           />
                           <button
                             type="button"
@@ -291,6 +315,7 @@ export default function ListProperty() {
                       value={formData.description}
                       onChange={handleInputChange}
                       className="min-h-[150px]"
+                      placeholder="Write a few words about your property..."
                     />
                   </CardContent>
                 </Card>

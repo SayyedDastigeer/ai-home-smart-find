@@ -24,7 +24,14 @@ export function SearchFilters({ onApply }: SearchFiltersProps) {
     homeTypes: [] as string[],
   });
 
-  const propertyTypes = ["Houses", "Townhomes", "Multi-family", "Condos", "Apartments", "Manufactured"];
+  const propertyTypes = [
+    "Houses", 
+    "Townhomes", 
+    "Multi-family", 
+    "Condos", 
+    "Apartments", 
+    "Manufactured"
+  ];
 
   const handleTypeToggle = (type: string) => {
     setFilters(prev => ({
@@ -36,10 +43,14 @@ export function SearchFilters({ onApply }: SearchFiltersProps) {
   };
 
   const handleApply = () => {
-    // Clean filters to prevent NaN errors
+    // 🔹 Clean filters to prepare for backend logic
     const cleanFilters = { ...filters };
-    if (cleanFilters.bedrooms === "Any") delete (cleanFilters as any).bedrooms;
-    if (cleanFilters.bathrooms === "Any") delete (cleanFilters as any).bathrooms;
+    
+    // If "Any" is selected, we send an empty string so the backend ignores the filter
+    if (cleanFilters.bedrooms === "Any") cleanFilters.bedrooms = "";
+    if (cleanFilters.bathrooms === "Any") cleanFilters.bathrooms = "";
+    
+    // 🔹 Pass the state to the parent (SearchResults.tsx)
     onApply(cleanFilters);
   };
 
@@ -89,7 +100,7 @@ export function SearchFilters({ onApply }: SearchFiltersProps) {
         </PopoverContent>
       </Popover>
 
-      {/* 3. Beds & Baths (Green Active State) */}
+      {/* 3. Beds & Baths */}
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" className="h-11 rounded-xl border-slate-200 font-bold px-4 hover:border-[#29A397] hover:text-[#29A397]">
@@ -104,6 +115,7 @@ export function SearchFilters({ onApply }: SearchFiltersProps) {
                 {["Any", "1+", "2+", "3+", "4+"].map((num) => (
                   <button
                     key={num}
+                    type="button"
                     onClick={() => setFilters({ ...filters, bedrooms: num })}
                     className={`flex-1 py-3 text-xs font-bold transition-all ${
                       filters.bedrooms === num ? "bg-[#29A397] text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
@@ -121,6 +133,7 @@ export function SearchFilters({ onApply }: SearchFiltersProps) {
                 {["Any", "1+", "1.5+", "2+", "3+"].map((num) => (
                   <button
                     key={num}
+                    type="button"
                     onClick={() => setFilters({ ...filters, bathrooms: num })}
                     className={`flex-1 py-3 text-xs font-bold transition-all ${
                       filters.bathrooms === num ? "bg-[#29A397] text-white" : "bg-slate-50 text-slate-600 hover:bg-slate-100"
@@ -136,7 +149,7 @@ export function SearchFilters({ onApply }: SearchFiltersProps) {
         </PopoverContent>
       </Popover>
 
-      {/* 4. Home Type (Green Checkboxes) */}
+      {/* 4. Home Type */}
       <Popover>
         <PopoverTrigger asChild>
           <Button variant="outline" className="h-11 rounded-xl border-slate-200 font-bold px-4 hover:border-[#29A397] hover:text-[#29A397]">
@@ -153,6 +166,7 @@ export function SearchFilters({ onApply }: SearchFiltersProps) {
               >
                 <Checkbox 
                   checked={filters.homeTypes.includes(type)}
+                  onCheckedChange={() => handleTypeToggle(type)}
                   className="rounded-md border-slate-300 data-[state=checked]:bg-[#29A397] data-[state=checked]:border-[#29A397]"
                 />
                 <span className="text-sm font-bold text-slate-700">{type}</span>
@@ -170,7 +184,7 @@ export function SearchFilters({ onApply }: SearchFiltersProps) {
         onClick={handleApply} 
         className="h-11 px-8 ml-auto bg-[#29A397] hover:opacity-90 font-bold rounded-xl shadow-lg shadow-[#29A397]/20 transition-all active:scale-95"
       >
-        Save search
+        Search
       </Button>
     </div>
   );

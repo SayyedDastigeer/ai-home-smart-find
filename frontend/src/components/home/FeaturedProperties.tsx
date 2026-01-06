@@ -4,7 +4,7 @@ import axios from "axios";
 import { motion } from "framer-motion"; 
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Loader2, Sparkles, LayoutGrid } from "lucide-react";
+import { ArrowRight, Loader2, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 
 interface FeaturedProps {
@@ -21,11 +21,17 @@ export const FeaturedProperties = ({ title, subtitle, type }: FeaturedProps) => 
 
   useEffect(() => {
     const fetchFeatured = async () => {
+      setLoading(true);
       try {
-        const res = await axios.get(`http://localhost:5000/api/properties?type=${type}`);
-        setProperties(res.data.slice(0, 4));
+        // We add limit=4 to ensure we only get a small set for the homepage
+        const res = await axios.get(`http://localhost:5000/api/properties?type=${type}&limit=4`);
+        
+        // 🔹 FIX: Access .properties because your backend is now paginated
+        const propertyData = res.data.properties || (Array.isArray(res.data) ? res.data : []);
+        setProperties(propertyData.slice(0, 4));
       } catch (err) {
         console.error("Fetch error", err);
+        setProperties([]);
       } finally {
         setLoading(false);
       }
@@ -59,12 +65,12 @@ export const FeaturedProperties = ({ title, subtitle, type }: FeaturedProps) => 
             <div className="flex items-center gap-3 mb-6">
               <div className="h-[1px] w-12 bg-[#29A397]" />
               <span className="text-[10px] font-black text-[#29A397] uppercase tracking-[0.4em] flex items-center gap-2">
-                <LayoutGrid className="h-3 w-3" /> {type === "sell" ? "Prime Investment" : "Luxury Leasing"}
+                <LayoutGrid className="h-3 w-3" /> {type === "sell" ? "Prime Investment" : "Luxury Renting"}
               </span>
             </div>
             
-            <h2 className="text-5xl md:text-7xl font-extralight tracking-tighter text-slate-900 leading-[0.9] mb-6">
-              {title.split(' ')[0]} <span className="font-black">{title.split(' ').slice(1).join(' ')}</span>
+            <h2 className="text-5xl md:text-7xl font-black tracking-tighter text-slate-900 leading-[0.9] mb-6 uppercase">
+              {title.split(' ')[0]} <span className="text-slate-200">{title.split(' ').slice(1).join(' ')}</span>
             </h2>
             
             <p className="text-slate-400 text-lg md:text-xl font-medium leading-relaxed max-w-xl">
@@ -74,7 +80,7 @@ export const FeaturedProperties = ({ title, subtitle, type }: FeaturedProps) => 
           
           <Button 
             variant="outline" 
-            className="group border-slate-200 hover:border-[#29A397] text-slate-900 hover:text-[#29A397] transition-all rounded-full px-12 h-16 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200/50"
+            className="group border-slate-200 hover:border-[#29A397] text-slate-900 hover:text-[#29A397] transition-all rounded-full px-12 h-16 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200/50 bg-white"
             onClick={() => navigate(`/search?type=${type}`)}
           >
             Explore Portfolio
@@ -85,9 +91,9 @@ export const FeaturedProperties = ({ title, subtitle, type }: FeaturedProps) => 
         {/* 🔹 Staggered Card Grid */}
         {loading ? (
           <div className="flex justify-center py-40">
-            <Loader2 className="h-10 w-10 animate-spin text-slate-200" />
+            <Loader2 className="h-10 w-10 animate-spin text-[#29A397]" />
           </div>
-        ) : (
+        ) : properties.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
             {properties.map((p, index) => (
               <motion.div
@@ -95,20 +101,19 @@ export const FeaturedProperties = ({ title, subtitle, type }: FeaturedProps) => 
                 initial={{ opacity: 0, y: 40 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
-                transition={{ duration: 0.8, delay: index * 0.15, ease: [0.21, 0.47, 0.32, 0.98] }}
+                transition={{ duration: 0.8, delay: index * 0.1, ease: [0.21, 0.47, 0.32, 0.98] }}
               >
-                <div className="group relative">
-                   {/* This pulls your actual PropertyCard component */}
-                   <PropertyCard 
-                    property={p} 
-                    initiallySaved={false} 
-                    onToggleSave={handleToggleSave}
-                  />
-                  {/* Subtle Glow Overlay on Hover */}
-                  <div className="absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-slate-900/5 group-hover:ring-[#29A397]/30 transition-all pointer-events-none" />
-                </div>
+                <PropertyCard 
+                  property={p} 
+                  initiallySaved={false} 
+                  onToggleSave={handleToggleSave}
+                />
               </motion.div>
             ))}
+          </div>
+        ) : (
+          <div className="text-center py-32 bg-white rounded-[3rem] border border-slate-100">
+             <p className="text-slate-400 font-bold uppercase tracking-widest text-xs">No Featured Assets Available</p>
           </div>
         )}
       </div>
