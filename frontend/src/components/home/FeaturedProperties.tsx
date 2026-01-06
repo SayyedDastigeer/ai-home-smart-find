@@ -1,82 +1,116 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { motion } from "framer-motion"; 
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Loader2 } from "lucide-react";
+import { ArrowRight, Loader2, Sparkles, LayoutGrid } from "lucide-react";
+import { toast } from "sonner";
 
-export const FeaturedProperties = () => {
+interface FeaturedProps {
+  title: string;
+  subtitle: string;
+  type: "sell" | "rent";
+}
+
+export const FeaturedProperties = ({ title, subtitle, type }: FeaturedProps) => {
   const [properties, setProperties] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const token = localStorage.getItem("token");
 
   useEffect(() => {
     const fetchFeatured = async () => {
       try {
-        const res = await axios.get("http://localhost:5000/api/properties");
-        // Only show the first 4 available properties
+        const res = await axios.get(`http://localhost:5000/api/properties?type=${type}`);
         setProperties(res.data.slice(0, 4));
       } catch (err) {
-        console.error("Failed to fetch featured properties", err);
+        console.error("Fetch error", err);
       } finally {
         setLoading(false);
       }
     };
     fetchFeatured();
-  }, []);
+  }, [type]);
 
-  // FIX: Added the missing onToggleSave handler required by PropertyCard
-  const handleToggleSave = (propertyId: string, newState: boolean) => {
-    console.log(`Property ${propertyId} save state changed to: ${newState}`);
-    // Since this is just a showcase on the home page, we don't necessarily 
-    // need to update a local list of saved IDs like we do in SearchResults.
+  const handleToggleSave = async (propertyId: string, newState: boolean) => {
+    if (!token) {
+      toast.error("Authentication required");
+      return;
+    }
+    try {
+      await axios.post(
+        `http://localhost:5000/api/properties/save-property/${propertyId}`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      toast.success(newState ? "Asset Bookmarked" : "Removed from Watchlist");
+    } catch (err) {
+      toast.error("Sync Error");
+    }
   };
 
   return (
-    <section className="py-20 bg-muted/30">
-      <div className="container px-4 mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-end mb-12 gap-4">
-          <div>
-            <h2 className="text-3xl font-bold tracking-tight mb-4 text-slate-900">Featured Homes</h2>
-            <p className="text-muted-foreground max-w-2xl text-lg">
-              Explore our handpicked selection of premium properties. Find your perfect match from our top-rated listings.
+    <section className="py-24 bg-[#FDFDFD]">
+      <div className="container px-8 mx-auto">
+        {/* 🔹 Refined Architectural Header */}
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end mb-20 gap-10">
+          <div className="max-w-4xl">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="h-[1px] w-12 bg-[#29A397]" />
+              <span className="text-[10px] font-black text-[#29A397] uppercase tracking-[0.4em] flex items-center gap-2">
+                <LayoutGrid className="h-3 w-3" /> {type === "sell" ? "Prime Investment" : "Luxury Leasing"}
+              </span>
+            </div>
+            
+            <h2 className="text-5xl md:text-7xl font-extralight tracking-tighter text-slate-900 leading-[0.9] mb-6">
+              {title.split(' ')[0]} <span className="font-black">{title.split(' ').slice(1).join(' ')}</span>
+            </h2>
+            
+            <p className="text-slate-400 text-lg md:text-xl font-medium leading-relaxed max-w-xl">
+              {subtitle}
             </p>
           </div>
+          
           <Button 
             variant="outline" 
-            className="hidden md:flex group border-primary text-primary hover:bg-primary hover:text-white transition-all"
-            onClick={() => navigate("/search")}
+            className="group border-slate-200 hover:border-[#29A397] text-slate-900 hover:text-[#29A397] transition-all rounded-full px-12 h-16 font-black text-xs uppercase tracking-widest shadow-xl shadow-slate-200/50"
+            onClick={() => navigate(`/search?type=${type}`)}
           >
-            View All Properties
-            <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            Explore Portfolio
+            <ArrowRight className="ml-3 h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Button>
         </div>
 
+        {/* 🔹 Staggered Card Grid */}
         {loading ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <div className="flex justify-center py-40">
+            <Loader2 className="h-10 w-10 animate-spin text-slate-200" />
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {properties.map((p) => (
-              <PropertyCard 
-                key={p._id} 
-                property={p} 
-                initiallySaved={false} 
-                onToggleSave={handleToggleSave} // FIX: Now passing the required function
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
+            {properties.map((p, index) => (
+              <motion.div
+                key={p._id}
+                initial={{ opacity: 0, y: 40 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: index * 0.15, ease: [0.21, 0.47, 0.32, 0.98] }}
+              >
+                <div className="group relative">
+                   {/* This pulls your actual PropertyCard component */}
+                   <PropertyCard 
+                    property={p} 
+                    initiallySaved={false} 
+                    onToggleSave={handleToggleSave}
+                  />
+                  {/* Subtle Glow Overlay on Hover */}
+                  <div className="absolute inset-0 rounded-[2rem] ring-1 ring-inset ring-slate-900/5 group-hover:ring-[#29A397]/30 transition-all pointer-events-none" />
+                </div>
+              </motion.div>
             ))}
           </div>
         )}
-
-        <div className="mt-12 text-center md:hidden">
-          <Button 
-            className="w-full h-12 bg-primary text-white"
-            onClick={() => navigate("/search")}
-          >
-            View All Properties
-          </Button>
-        </div>
       </div>
     </section>
   );

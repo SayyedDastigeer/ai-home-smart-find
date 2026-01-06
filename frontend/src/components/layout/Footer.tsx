@@ -1,144 +1,103 @@
 import { Link } from "react-router-dom";
-import { Sparkles, Mail, Phone, MapPin } from "lucide-react";
+import { Sparkles, Mail, Phone, MapPin, Instagram, Twitter, Linkedin, Facebook } from "lucide-react";
 
 const footerLinks = {
   product: [
-    { label: "Search Properties", href: "/search" },
+    { label: "Search Portfolio", href: "/search" },
     { label: "AI Recommendations", href: "/recommendations" },
-    { label: "List Property", href: "/list-property" },
-    { label: "Pricing", href: "/pricing" },
+    { label: "List Asset", href: "/list-property" },
+    { label: "Enterprise Pricing", href: "/pricing" },
   ],
   company: [
-    { label: "About Us", href: "/about" },
+    { label: "Our Story", href: "/about" },
     { label: "Careers", href: "/careers" },
-    { label: "Blog", href: "/blog" },
-    { label: "Contact", href: "/contact" },
+    { label: "Press Room", href: "/blog" },
+    { label: "Corporate Contact", href: "/contact" },
   ],
   resources: [
-    { label: "Help Center", href: "/help" },
-    { label: "Market Reports", href: "/reports" },
+    { label: "Client Help Center", href: "/help" },
+    { label: "Market Intelligence", href: "/reports" },
     { label: "API Documentation", href: "/api" },
-    { label: "Partner Program", href: "/partners" },
+    { label: "Broker Program", href: "/partners" },
   ],
   legal: [
     { label: "Privacy Policy", href: "/privacy" },
-    { label: "Terms of Service", href: "/terms" },
+    { label: "Terms of Engagement", href: "/terms" },
     { label: "Cookie Policy", href: "/cookies" },
   ],
 };
 
 export function Footer() {
   return (
-    <footer className="bg-card border-t">
-      <div className="container py-12 md:py-16">
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-8 lg:gap-12">
-          {/* Brand */}
-          <div className="col-span-2 md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-4">
-              <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-primary">
-                <Sparkles className="h-5 w-5 text-primary-foreground" />
+    <footer className="bg-[#0F172A] text-slate-300 border-t border-white/5 pt-20 pb-10">
+      <div className="container mx-auto px-6">
+        <div className="grid grid-cols-2 md:grid-cols-12 gap-12 mb-20">
+          {/* Brand & Mission Section */}
+          <div className="col-span-2 md:col-span-4 lg:col-span-5">
+            <Link to="/" className="flex items-center gap-3 mb-8 group">
+              <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-[#29A397] shadow-lg shadow-[#29A397]/20 transition-transform group-hover:scale-105">
+                <Sparkles className="h-6 w-6 text-white" />
               </div>
-              <span className="text-xl font-bold">HomeAI</span>
+              <div className="flex flex-col">
+                <span className="text-xl font-black tracking-tighter text-white leading-none">HOMEAI</span>
+                <span className="text-[10px] font-bold text-[#29A397] uppercase tracking-[0.2em] leading-none mt-1.5">Intelligence in Realty</span>
+              </div>
             </Link>
-            <p className="text-sm text-muted-foreground mb-6">
-              AI-powered real estate platform for smarter property decisions.
+            <p className="text-base text-slate-400 font-medium mb-10 max-w-sm leading-relaxed">
+              Harnessing proprietary neural networks to redefine the global standard of property acquisition and market analytics.
             </p>
-            <div className="space-y-2 text-sm text-muted-foreground">
-              <div className="flex items-center gap-2">
-                <Mail className="h-4 w-4" />
-                hello@homeai.com
-              </div>
-              <div className="flex items-center gap-2">
-                <Phone className="h-4 w-4" />
-                +1 (555) 123-4567
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin className="h-4 w-4" />
-                San Francisco, CA
-              </div>
+            <div className="flex gap-5">
+              {[Twitter, Linkedin, Instagram, Facebook].map((Icon, i) => (
+                <a key={i} href="#" className="h-10 w-10 flex items-center justify-center rounded-full border border-white/10 hover:border-[#29A397] hover:text-[#29A397] transition-all">
+                  <Icon className="h-4 w-4" />
+                </a>
+              ))}
             </div>
           </div>
 
-          {/* Links */}
-          <div>
-            <h4 className="font-semibold mb-4">Product</h4>
-            <ul className="space-y-2.5">
-              {footerLinks.product.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Company</h4>
-            <ul className="space-y-2.5">
-              {footerLinks.company.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Resources</h4>
-            <ul className="space-y-2.5">
-              {footerLinks.resources.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
-
-          <div>
-            <h4 className="font-semibold mb-4">Legal</h4>
-            <ul className="space-y-2.5">
-              {footerLinks.legal.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    to={link.href}
-                    className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </div>
+          {/* Links Sections */}
+          {Object.entries(footerLinks).map(([category, links]) => (
+            <div key={category} className="col-span-1 md:col-span-2">
+              <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-[#29A397] mb-8">
+                {category}
+              </h4>
+              <ul className="space-y-4">
+                {links.map((link) => (
+                  <li key={link.href}>
+                    <Link
+                      to={link.href}
+                      className="text-sm font-semibold text-slate-400 hover:text-white transition-colors"
+                    >
+                      {link.label}
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
         </div>
 
-        <div className="border-t mt-12 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-sm text-muted-foreground">
-            © 2024 HomeAI. All rights reserved.
-          </p>
-          <div className="flex gap-4">
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-              Twitter
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-              LinkedIn
-            </a>
-            <a href="#" className="text-muted-foreground hover:text-foreground transition-colors">
-              Instagram
-            </a>
+        {/* Global Contact & Copyright Row */}
+        <div className="border-t border-white/5 pt-12">
+          <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-10">
+            <div className="flex flex-wrap gap-8 text-[11px] font-bold uppercase tracking-widest text-slate-500">
+              <div className="flex items-center gap-3">
+                <Mail className="h-3.5 w-3.5 text-[#29A397]" />
+                hello@homeai.com
+              </div>
+              <div className="flex items-center gap-3">
+                <Phone className="h-3.5 w-3.5 text-[#29A397]" />
+                +1 (555) 123-4567
+              </div>
+              <div className="flex items-center gap-3">
+                <MapPin className="h-3.5 w-3.5 text-[#29A397]" />
+                San Francisco, CA
+              </div>
+            </div>
+            
+            <p className="text-[11px] font-bold text-slate-500 uppercase tracking-widest">
+              © 2026 HomeAI • <span className="text-slate-600">Secure AI Environment</span>
+            </p>
           </div>
         </div>
       </div>
