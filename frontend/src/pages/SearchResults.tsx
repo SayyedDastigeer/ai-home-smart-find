@@ -14,38 +14,54 @@ import { motion } from "framer-motion";
 const SearchResults = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [properties, setProperties] = useState<any[]>([]);
+  const [savedIds, setSavedIds] = useState<string[]>([]); // 🔹 Track saved IDs
   const [loading, setLoading] = useState(true);
   const [pagination, setPagination] = useState({ current: 1, total: 1 });
 
+  const token = localStorage.getItem("token");
   const currentType = searchParams.get("type") || "sell";
   const currentPage = parseInt(searchParams.get("page") || "1");
 
-  const fetchProperties = async (additionalFilters: any = {}) => {
+  const fetchProperties = async () => {
     setLoading(true);
     try {
+      // 1. Fetch properties based on search
       const params = {
         ...Object.fromEntries([...searchParams]),
-        ...additionalFilters,
         page: currentPage,
         limit: 9,
       };
-
       const res = await axios.get("http://localhost:5000/api/properties", { params });
       
-      // 🔹 Extraction for paginated response
       const propertyData = res.data.properties || (Array.isArray(res.data) ? res.data : []);
       setProperties(propertyData);
-
       setPagination({
         current: res.data.currentPage || currentPage || 1,
         total: res.data.totalPages || 1,
       });
 
+      // 2. 🔹 CRITICAL FIX: Fetch user's saved list to highlight hearts
+      if (token) {
+        const savedRes = await axios.get("http://localhost:5000/api/properties/saved-properties", {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        // Map to an array of just IDs for easy checking: ["id1", "id2"]
+        setSavedIds(savedRes.data.map((p: any) => p._id));
+      }
     } catch (err) {
       console.error("Fetch error:", err);
       setProperties([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // 🔹 Sync local state when user clicks heart so it stays red without refresh
+  const handleToggleSaveLocal = (id: string, isNowSaved: boolean) => {
+    if (isNowSaved) {
+      setSavedIds((prev) => [...prev, id]);
+    } else {
+      setSavedIds((prev) => prev.filter((savedId) => savedId !== id));
     }
   };
 
@@ -64,7 +80,6 @@ const SearchResults = () => {
     <div className="min-h-screen flex flex-col bg-[#FDFDFD]">
       <Navbar />
       
-      {/* 🔹 Search Header */}
       <div className="bg-white border-b border-slate-100 py-12">
         <div className="container px-8 flex flex-col md:flex-row justify-between items-center gap-8">
           <div>
@@ -99,7 +114,6 @@ const SearchResults = () => {
 
       <PageTransition>
         <main className="flex-1 container px-8 py-16 flex flex-col lg:flex-row gap-16">
-          {/* 🔹 Sidebar Filter */}
           <aside className="w-full lg:w-80 shrink-0 lg:sticky lg:top-24 h-fit bg-white p-8 rounded-[2.5rem] border border-slate-100 shadow-sm">
             <SearchFilters onApply={(filters) => {
                 const newParams = new URLSearchParams(searchParams);
@@ -109,7 +123,6 @@ const SearchResults = () => {
             }} />
           </aside>
 
-          {/* 🔹 Results Grid */}
           <div className="flex-1">
             {loading ? (
               <div className="flex flex-col items-center py-40 gap-4">
@@ -128,14 +141,14 @@ const SearchResults = () => {
                     >
                       <PropertyCard 
                         property={p} 
-                        initiallySaved={false} 
-                        onToggleSave={() => {}} 
+                        // 🔹 FIX: Check if ID exists in our saved list
+                        initiallySaved={savedIds.includes(p._id)} 
+                        onToggleSave={handleToggleSaveLocal} 
                       />
                     </motion.div>
                   ))}
                 </div>
 
-                {/* 🔹 Pagination */}
                 {pagination.total > 1 && (
                   <div className="flex justify-center items-center gap-6 mt-20 pt-10 border-t border-slate-100">
                     <Button 

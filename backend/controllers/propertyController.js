@@ -204,3 +204,64 @@ exports.updateProperty = async (req, res) => {
     res.status(500).json({ message: "Failed to update property" });
   }
 };
+// backend/controllers/propertyController.js
+
+exports.getRankedMatches = async (req, res) => {
+  try {
+    const { budget, homeType, priority } = req.query; // priority: 'investment', 'family', 'commute'
+    const properties = await Property.find({ status: "available" }).lean();
+
+    const rankedProperties = properties.map(property => {
+      let score = 0;
+      let reasons = [];
+
+      // 1. Price Alignment (Max 40 points)
+      if (property.price <= Number(budget)) {
+        score += 40;
+        reasons.push("Perfectly within your financial comfort zone.");
+      } else if (property.price <= Number(budget) * 1.1) {
+        score += 25;
+        reasons.push("Slightly above budget, but high value for the area.");
+      }
+
+      // 2. Home Type Match (Max 30 points)
+      if (property.homeType === homeType) {
+        score += 30;
+        reasons.push(`Matches your preferred structure type (${homeType}).`);
+      }
+
+      // 3. Priority-Based Reasoning (Max 30 points)
+      if (priority === 'investment') {
+        if (property.area > 2000) {
+          score += 30;
+          reasons.push("Large square footage indicates strong resale potential.");
+        }
+      } else if (priority === 'family') {
+        if (property.bedrooms >= 3) {
+          score += 30;
+          reasons.push("Spacious layout ideal for growing family needs.");
+        }
+      }
+
+      // Generate a final "Primary Reason"
+      const primaryReason = reasons.length > 0 
+        ? reasons[0] 
+        : "Good overall match based on current market availability.";
+
+      return {
+        ...property,
+        matchScore: Math.min(score, 100),
+        aiReason: primaryReason
+      };
+    });
+
+    // Sort by highest score and return top results
+    const topRanked = rankedProperties
+      .sort((a, b) => b.matchScore - a.matchScore)
+      .slice(0, 6);
+
+    res.json(topRanked);
+  } catch (error) {
+    res.status(500).json({ message: "Ranking failed", error: error.message });
+  }
+};
