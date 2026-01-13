@@ -1,19 +1,22 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Heart,
-  MapPin,
-  Bed,
-  Bath,
-  Square,
-  Sparkles,
-  ArrowUpRight,
+import { 
+  Heart, 
+  ArrowRight, 
+  Sparkles, 
+  MapPin 
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { useEffect, useState } from "react";
+import { motion } from "framer-motion";
 
+/**
+ * PropertyCard Component
+ * Brand Color: #29A397
+ * Layout: Cinematic 16:9 Image + Clean Stats
+ */
 export function PropertyCard({
   property,
   initiallySaved = false,
@@ -23,25 +26,30 @@ export function PropertyCard({
   initiallySaved?: boolean;
   onToggleSave: (id: string, newState: boolean) => void;
 }) {
+  // Initialize state directly from the prop
   const [saved, setSaved] = useState(initiallySaved);
 
-  // Sync saved state with prop whenever it changes
+  // Sync state if parent data changes (Ensures heart turns red on load)
   useEffect(() => {
     setSaved(initiallySaved);
   }, [initiallySaved]);
 
-  const displayImage =
-    property.images?.[0] ||
-    property.image ||
-    "https://images.unsplash.com/photo-1560518883-ce09059eeffa?q=80&w=1000&auto=format&fit=crop";
+  const displayImage = 
+    property.images?.[0] || 
+    property.image || 
+    "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=2070";
 
   const handleToggleSave = async (e: React.MouseEvent) => {
     e.preventDefault();
+    e.stopPropagation(); 
+    
     const token = localStorage.getItem("token");
     if (!token) return;
 
     const newState = !saved;
-    setSaved(newState); // optimistic update
+    
+    // Optimistic Update: Change color immediately
+    setSaved(newState);
     onToggleSave(property._id, newState);
 
     try {
@@ -52,94 +60,102 @@ export function PropertyCard({
       );
     } catch (err) {
       console.error("Save toggle failed", err);
-      // revert if failed
+      // Rollback if server fails
       setSaved(!newState);
       onToggleSave(property._id, !newState);
     }
   };
 
   return (
-    <Card className="group overflow-hidden rounded-xl border-slate-200 bg-white transition-all duration-300 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:-translate-y-1">
-      <div className="relative aspect-[16/10] overflow-hidden">
-        <img
-          src={displayImage}
-          alt={property.title}
-          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-110"
-        />
+    <motion.div 
+      whileHover={{ y: -8 }} 
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
+      className="w-full"
+    >
+      <Card className="group overflow-hidden rounded-[20px] border-none bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all duration-500 hover:shadow-[0_25px_50px_rgba(0,0,0,0.1)] dark:bg-slate-900">
+        
+        {/* --- CINEMATIC IMAGE AREA (16:9) --- */}
+        <div className="relative aspect-video overflow-hidden bg-slate-100">
+          <img
+            src={displayImage}
+            className="h-full w-full object-cover transition-transform duration-1000 ease-in-out group-hover:scale-105"
+            alt={property.title}
+          />
 
-        <div className="absolute inset-x-3 top-3 flex items-center justify-between">
-          <Badge className="bg-white/90 px-2 py-1 text-xs font-semibold text-slate-900 backdrop-blur-md hover:bg-white">
-            <Sparkles className="mr-1 h-3 w-3 text-amber-500" />
-            Featured
-          </Badge>
+          {/* Luxury Overlay Tags */}
+          <div className="absolute inset-x-3 top-3 flex items-start justify-between z-10">
+            <Badge className="bg-white/20 backdrop-blur-xl border border-white/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg">
+              <Sparkles className="h-3 w-3 mr-2 text-[#29A397] fill-[#29A397]" /> 
+              Featured
+            </Badge>
 
-          <button
-            onClick={handleToggleSave}
-            className="group/heart flex h-9 w-9 items-center justify-center rounded-full bg-white/80 backdrop-blur-sm transition-all hover:bg-white active:scale-90"
-          >
-            <Heart
-              className={`h-5 w-5 transition-colors ${
-                saved
-                  ? "fill-red-500 text-red-500"
-                  : "text-slate-600 group-hover/heart:text-red-500"
-              }`}
-            />
-          </button>
-        </div>
-
-        <div className="absolute bottom-3 left-3">
-          <div className="rounded-lg bg-slate-900/80 px-3 py-1.5 font-bold text-white backdrop-blur-md">
-            ₹{property.price?.toLocaleString()}
-            {property.type === "rent" && (
-              <span className="ml-1 text-xs font-normal text-slate-300">/mo</span>
-            )}
+            <button
+              onClick={handleToggleSave}
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-xl border border-white/30 text-white transition-all hover:bg-white hover:text-red-500 shadow-xl"
+            >
+              <Heart 
+                className={`h-5 w-5 transition-all ${
+                  saved ? "fill-red-500 text-red-500 stroke-red-500" : "stroke-[2px]"
+                }`} 
+              />
+            </button>
           </div>
         </div>
-      </div>
 
-      <CardContent className="p-5">
-        <h3 className="line-clamp-1 text-xl font-bold tracking-tight text-slate-900 mb-2">
-          {property.title}
-        </h3>
-        <div className="mb-4 flex items-center gap-1 text-sm font-medium text-slate-500">
-          <MapPin className="h-4 w-4 text-primary" />
-          <span className="line-clamp-1">{property.location}</span>
-        </div>
+        {/* --- CONTENT SECTION --- */}
+        <CardContent className="p-5">
+          {/* Price Section */}
+          <div className="mb-3">
+            <h3 className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white leading-none">
+              ₹{property.price?.toLocaleString()}
+              {property.type === "rent" && (
+                <span className="text-sm font-medium text-slate-400 ml-1">/mo</span>
+              )}
+            </h3>
+          </div>
 
-        <div className="mb-6 grid grid-cols-3 gap-2 border-y border-slate-100 py-3">
-          <div className="flex flex-col items-center gap-1 border-r border-slate-100">
-            <div className="flex items-center gap-1.5 text-slate-900 font-semibold">
-              <Bed className="h-4 w-4 text-slate-400" /> {property.bedrooms}
+          {/* Professional Property Stats (Clean Typography) */}
+          <div className="flex items-center gap-4 py-3 border-y border-slate-50 dark:border-slate-800">
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-bold text-slate-900 dark:text-white leading-none">{property.bedrooms}</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400">Beds</span>
             </div>
-            <span className="text-[10px] uppercase tracking-wider text-slate-400">
-              Beds
-            </span>
-          </div>
-          <div className="flex flex-col items-center gap-1 border-r border-slate-100">
-            <div className="flex items-center gap-1.5 text-slate-900 font-semibold">
-              <Bath className="h-4 w-4 text-slate-400" /> {property.bathrooms}
+            <div className="h-4 w-[1px] bg-slate-100 dark:bg-slate-800" />
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-bold text-slate-900 dark:text-white leading-none">{property.bathrooms}</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400">Baths</span>
             </div>
-            <span className="text-[10px] uppercase tracking-wider text-slate-400">
-              Baths
-            </span>
-          </div>
-          <div className="flex flex-col items-center gap-1">
-            <div className="flex items-center gap-1.5 text-slate-900 font-semibold">
-              <Square className="h-4 w-4 text-slate-400" /> {property.area}
+            <div className="h-4 w-[1px] bg-slate-100 dark:bg-slate-800" />
+            <div className="flex items-baseline gap-1">
+              <span className="text-lg font-bold text-slate-900 dark:text-white leading-none">{property.area}</span>
+              <span className="text-[10px] uppercase font-bold text-slate-400">Sqft</span>
             </div>
-            <span className="text-[10px] uppercase tracking-wider text-slate-400">
-              Sqft
-            </span>
           </div>
-        </div>
 
-        <Link to={`/property/${property._id}`} className="block">
-          <Button className="w-full group/btn bg-slate-900 hover:bg-primary transition-all duration-300">
-            View Details
-            <ArrowUpRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5" />
-          </Button>
-        </Link>
-      </CardContent>
-    </Card>
+          {/* Title and Location */}
+          <div className="pt-4 space-y-1">
+            <p className="text-base font-bold text-slate-800 dark:text-slate-100 truncate tracking-tight group-hover:text-[#29A397] transition-colors">
+              {property.title}
+            </p>
+            <div className="flex items-center gap-1.5 text-slate-400">
+              <MapPin className="h-3.5 w-3.5 text-[#29A397]" />
+              <span className="text-xs font-medium truncate tracking-tight">{property.location}</span>
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <div className="pt-5">
+            <Link to={`/property/${property._id}`}>
+              <Button
+                className="w-full h-12 bg-[#29A397] hover:bg-[#21857b] text-white font-bold text-[11px] uppercase tracking-[0.2em] rounded-xl shadow-[0_8px_20px_rgba(41,163,151,0.2)] group/btn transition-all duration-300"
+              >
+                View Details
+                <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover/btn:translate-x-2" />
+              </Button>
+            </Link>
+          </div>
+        </CardContent>
+      </Card>
+    </motion.div>
   );
 }
