@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
   Heart, 
+  MoreHorizontal, 
   ArrowRight, 
   Sparkles, 
   MapPin 
@@ -13,9 +14,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 
 /**
- * PropertyCard Component
- * Brand Color: #29A397
- * Layout: Cinematic 16:9 Image + Clean Stats
+ * FIXED: Heart color issue resolved by syncing state with props 
+ * and using an optimistic UI update pattern.
  */
 export function PropertyCard({
   property,
@@ -29,7 +29,8 @@ export function PropertyCard({
   // Initialize state directly from the prop
   const [saved, setSaved] = useState(initiallySaved);
 
-  // Sync state if parent data changes (Ensures heart turns red on load)
+  // CRITICAL: This effect ensures the heart turns red if the parent 
+  // updates the "initiallySaved" status after the initial render.
   useEffect(() => {
     setSaved(initiallySaved);
   }, [initiallySaved]);
@@ -41,14 +42,14 @@ export function PropertyCard({
 
   const handleToggleSave = async (e: React.MouseEvent) => {
     e.preventDefault();
-    e.stopPropagation(); 
+    e.stopPropagation(); // Prevents navigating to the details page
     
     const token = localStorage.getItem("token");
     if (!token) return;
 
     const newState = !saved;
     
-    // Optimistic Update: Change color immediately
+    // 1. Optimistic Update (Change color immediately)
     setSaved(newState);
     onToggleSave(property._id, newState);
 
@@ -60,7 +61,7 @@ export function PropertyCard({
       );
     } catch (err) {
       console.error("Save toggle failed", err);
-      // Rollback if server fails
+      // 2. Rollback if the server request fails
       setSaved(!newState);
       onToggleSave(property._id, !newState);
     }
@@ -74,7 +75,7 @@ export function PropertyCard({
     >
       <Card className="group overflow-hidden rounded-[20px] border-none bg-white shadow-[0_4px_20px_rgba(0,0,0,0.05)] transition-all duration-500 hover:shadow-[0_25px_50px_rgba(0,0,0,0.1)] dark:bg-slate-900">
         
-        {/* --- CINEMATIC IMAGE AREA (16:9) --- */}
+        {/* --- IMAGE AREA (16:9 Cinematic Ratio) --- */}
         <div className="relative aspect-video overflow-hidden bg-slate-100">
           <img
             src={displayImage}
@@ -84,14 +85,14 @@ export function PropertyCard({
 
           {/* Luxury Overlay Tags */}
           <div className="absolute inset-x-3 top-3 flex items-start justify-between z-10">
-            <Badge className="bg-white/20 backdrop-blur-xl border border-white/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white shadow-lg">
+            <Badge className="bg-white/20 backdrop-blur-xl border border-white/30 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-white">
               <Sparkles className="h-3 w-3 mr-2 text-[#29A397] fill-[#29A397]" /> 
               Featured
             </Badge>
 
             <button
               onClick={handleToggleSave}
-              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-xl border border-white/30 text-white transition-all hover:bg-white hover:text-red-500 shadow-xl"
+              className="flex h-9 w-9 items-center justify-center rounded-full bg-white/20 backdrop-blur-xl border border-white/30 text-white transition-all hover:bg-white hover:text-red-500 shadow-lg"
             >
               <Heart 
                 className={`h-5 w-5 transition-all ${
@@ -104,17 +105,17 @@ export function PropertyCard({
 
         {/* --- CONTENT SECTION --- */}
         <CardContent className="p-5">
-          {/* Price Section */}
-          <div className="mb-3">
+          <div className="flex items-center justify-between mb-3">
             <h3 className="text-3xl font-black tracking-tighter text-slate-900 dark:text-white leading-none">
               ₹{property.price?.toLocaleString()}
               {property.type === "rent" && (
                 <span className="text-sm font-medium text-slate-400 ml-1">/mo</span>
               )}
             </h3>
+            <MoreHorizontal className="h-5 w-5 cursor-pointer text-slate-300 hover:text-[#29A397] transition-colors" />
           </div>
 
-          {/* Professional Property Stats (Clean Typography) */}
+          {/* Professional Property Stats */}
           <div className="flex items-center gap-4 py-3 border-y border-slate-50 dark:border-slate-800">
             <div className="flex items-baseline gap-1">
               <span className="text-lg font-bold text-slate-900 dark:text-white leading-none">{property.bedrooms}</span>
@@ -132,18 +133,16 @@ export function PropertyCard({
             </div>
           </div>
 
-          {/* Title and Location */}
           <div className="pt-4 space-y-1">
             <p className="text-base font-bold text-slate-800 dark:text-slate-100 truncate tracking-tight group-hover:text-[#29A397] transition-colors">
               {property.title}
             </p>
             <div className="flex items-center gap-1.5 text-slate-400">
               <MapPin className="h-3.5 w-3.5 text-[#29A397]" />
-              <span className="text-xs font-medium truncate tracking-tight">{property.location}</span>
+              <span className="text-xs font-medium truncate">{property.location}</span>
             </div>
           </div>
 
-          {/* Action Button */}
           <div className="pt-5">
             <Link to={`/property/${property._id}`}>
               <Button
