@@ -1,18 +1,25 @@
 require("dotenv").config();
 const express = require("express");
-const http = require("http"); // Required for Socket.io
-const { Server } = require("socket.io"); // Required for Socket.io
+const http = require("http");
+const { Server } = require("socket.io");
 const cors = require("cors");
 const morgan = require("morgan");
 const connectDB = require("./config/db");
 
+// 🔹 1. Import all route files
+const authRoutes = require("./routes/authRoutes");
+const dashboardRoutes = require("./routes/dashboardRoutes");
+const propertyRoutes = require("./routes/propertyRoutes");
+const inquiryRoutes = require("./routes/inquiryRoutes");
+const chatRoutes = require("./routes/chatRoutes"); // Added to fix Chatbot 404
+
 const app = express();
-const server = http.createServer(app); // Wrap Express app
+const server = http.createServer(app);
 
 // Initialize Socket.io with CORS
 const io = new Server(server, {
   cors: {
-    origin: "http://localhost:8080", // Adjust to your frontend URL
+    origin: "http://localhost:8080", // Matches your frontend port
     methods: ["GET", "POST"]
   }
 });
@@ -25,11 +32,10 @@ app.use(morgan("dev"));
 // Database Connection
 connectDB();
 
-// Real-time Logic
+// Real-time Logic for Inbox/Chat
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  // Users join a unique room based on their ID for private chats
   socket.on("join_room", (userId) => {
     socket.join(userId);
     console.log(`User ${userId} joined their chat room`);
@@ -40,20 +46,20 @@ io.on("connection", (socket) => {
   });
 });
 
-// Pass io to Express so controllers can emit events
+// Pass io to Express so controllers can emit real-time events
 app.set("socketio", io);
 
-// Routes
-app.use("/api/auth", require("./routes/authRoutes"));
-app.use("/api/dashboard", require("./routes/dashboardRoutes"));
-app.use("/api/properties", require("./routes/propertyRoutes"));
-app.use("/api/inquiries", require("./routes/inquiryRoutes"));
+// 🔹 2. Register API Routes
+app.use("/api/auth", authRoutes);
+app.use("/api/dashboard", dashboardRoutes);
+app.use("/api/properties", propertyRoutes);
+app.use("/api/inquiries", inquiryRoutes);
+app.use("/api/chat", chatRoutes); // Fixed: This mounts the ask-ai endpoint
 
 app.get("/", (req, res) => {
-  res.send("Backend running with Socket.io support");
+  res.send("Backend running with AI, Socket.io, and Luxe Real Estate support");
 });
 
-// Listen on the 'server' object, NOT 'app'
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
